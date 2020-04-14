@@ -1,0 +1,727 @@
+\documentclass [a4paper] {article}
+
+\usepackage[utf8]{inputenc}
+
+\title{Practica 1: Fundamentos de la Ciencia de Datos}
+\author{
+  Daniel Lopez Moreno\\
+  \and
+  Alejandro Fernandez Maceira\\
+  \and
+  Alvaro Maestre Santa
+}
+
+\usepackage{Sweave}
+\begin{document}
+
+\maketitle
+
+\section{Análisis de datos con R}
+En esta parte de la practica se nos pide que 
+apliquemos los conceptos aprendidos en el tema.\\
+
+\subsection{Analisis de un archivo .txt}
+\subsubsection{Comandos basicos}
+Primero comenzaremos con los comandos basicos para 
+comenzar a utilizar R.
+
+\begin{itemize}
+\item \textbf{help()}: Muestra la pagina de ayuda de R.
+\item \textbf{help("comando()")}: Muestra la ayuda relativa al comando que se 
+								  pasa como argumento
+\item \textbf{help.start()}: Abre la pagina de documentación online de R
+\item \textbf{setwd("directorio")}: Cambia el directorio de trabajo al 
+									directorio seleccionado
+\item \textbf{list.files()}: Muestra una lista de los archivos del directorio
+							 actual de trabajo. Otra función equivalente sería 
+							 \textbf{dir()}
+							 
+\end{itemize}
+
+A continuación mostraremos algunos comandos basicos para asignar valor
+a las variables que creemos:
+
+\begin{itemize}
+\item \textbf{x<-2}: De esta forma asignamos un valor numérico a la variables
+					 x. También podríamos utilizar = como sustituto de <-.
+\item \textbf{num<-c(2.3,4,5.6)}: Utilizamos la función c para generar vectores de
+								  valores y asignárselos a num. Estos vectores pueden
+								  ser cuantitativos (c(2.3,4,5.6)), cualitativos(c("verde","azul","rojo"))
+								  y lógicos (c(TRUE,FALSE,TRUE) o c(T,F,T))
+\item \textbf{mat1<-matrix(nrow=2,ncol=2,c(69.7,71.3,168,178))}: Utilizando el comando
+							matrix() podemos crear una matriz de dimensiones nrowXncol y 
+							llenarla con los datos del vector c. Si usamos el modificador
+							byrow=T, la matriz se llenará por filas y no por columnas.
+\end{itemize}
+
+\subsubsection{Tratamiento de un archivo .txt}
+Una vez hemos aprendido algunos comando basicos de R vamos a leer un archivo de datos
+llamado \textit{"satelites.txt"}, que contiene información sobre los satelites menores 
+de Urano, y vamos a operar con su información.\\\\
+
+El archivo \textit{"satelites.txt"} tendrá la siguiente estructura:\\
+
+\begingroup
+\setlength{\parindent}{20ex}
+\obeylines
+\input{"satelites.txt"}%
+\par
+\endgroup%
+
+Para leer el archivo y asignarlo a una variable \textbf{sat} ejecutaremos la siguiente
+función:
+
+\begin{Schunk}
+\begin{Sinput}
+> sat<-read.table("satelites.txt")
+\end{Sinput}
+\end{Schunk}
+\subsubsection{Cálculo de frecuencias, media, desviación típica y varianza}
+
+Una vez hemos cargado el archivo ya podemos operar con su información.\\
+\paragraph{Longitud}. Para empezar vamos a calcular la longitud de la columna \textit{Radio} de la matriz generada, 
+utilizaremos la
+función \textbf{length()} sobre la columna Radio:
+
+\begin{Schunk}
+\begin{Sinput}
+> length(sat$Radio)
+\end{Sinput}
+\begin{Soutput}
+[1] 12
+\end{Soutput}
+\end{Schunk}
+\paragraph{Media aritmetica}. Ahora vamos a calcular la media aritmética de los radios, para ello utilizaremos la
+función \textbf{mean()} sobre la columna Radio y asignaremos el valor a la variable
+\textbf{mr}:
+
+\begin{Schunk}
+\begin{Sinput}
+> mr<-mean(sat$Radio)
+> mr
+\end{Sinput}
+\begin{Soutput}
+[1] 25.08333
+\end{Soutput}
+\end{Schunk}
+\paragraph{Frecuencia absoluta}. Utilizando la función \textbf{table()} calcularemos las frecuencias absolutas de una 
+columna. Haremos la prueba calculando las frecuencias de los radios:
+
+\begin{Schunk}
+\begin{Sinput}
+> frecabsradio<-table(sat$Radio)
+> frecabsradio
+\end{Sinput}
+\begin{Soutput}
+13 15 16 20 22 27 29 30 33 34 42 
+ 1  1  1  2  1  1  1  1  1  1  1 
+\end{Soutput}
+\end{Schunk}
+\paragraph{Frecuencia acumulada}. También podemos calcular la frecuencia acumulada de la columna Radio. Para ello
+utilizaremos la función \textbf{cumsum()}:
+
+\begin{Schunk}
+\begin{Sinput}
+> frecabsacumradio<-cumsum(table(sat$Radio))
+> frecabsacumradio
+\end{Sinput}
+\begin{Soutput}
+13 15 16 20 22 27 29 30 33 34 42 
+ 1  2  3  5  6  7  8  9 10 11 12 
+\end{Soutput}
+\end{Schunk}
+\paragraph{Frecuencia relativa}. En R no existe una función específica que nos ayude a calcular la frecuencia relativa,
+pero sí existe la opción de crear nuestras propias funciones. Por lo tanto, crearemos
+nuestra propia función para calcular la frecuencia relativa dividiendo la \textbf{frecabsradio} entre
+\textbf{length()} de la columna Radio:
+
+\begin{Schunk}
+\begin{Sinput}
+> frecrel<-function(Radio){table(Radio)/length(Radio)}
+> frecrel(sat$Radio)
+\end{Sinput}
+\begin{Soutput}
+Radio
+        13         15         16         20         22         27         29 
+0.08333333 0.08333333 0.08333333 0.16666667 0.08333333 0.08333333 0.08333333 
+        30         33         34         42 
+0.08333333 0.08333333 0.08333333 0.08333333 
+\end{Soutput}
+\end{Schunk}
+Una vez hemos creado nuestra función, podemos guardarla en un archivo .R utilizando la
+función \textbf{dump()}, indicando el nombre del archivo destino:
+
+\begin{Schunk}
+\begin{Sinput}
+> dump("frecrel",file="FrecRelativa.R")
+\end{Sinput}
+\end{Schunk}
+También podemos cargar funciones que hayamos generado anteriormnete utilizando 
+\textbf{source()} y el nombre del archivo .R:
+
+\begin{Schunk}
+\begin{Sinput}
+> source("FrecRelativa.R")
+\end{Sinput}
+\end{Schunk}
+\paragraph{Frecuencia Rel. Acumulada}. Ahora que ya sabemos como crear nuestras propias funciones, vamos a hacer los mismo
+para calcular la frecuencia relativa acumulada, creando la función \textbf{frecrelacum()}:
+
+\begin{Schunk}
+\begin{Sinput}
+> frecrelacum <-function(Radio){cumsum(table(Radio))/length(Radio)}
+> dump("frecrelacum",file="FrecRelativaAcum.R")
+> source("FrecRelativaAcum.R")
+> frecrelacum(sat$Radio)
+\end{Sinput}
+\begin{Soutput}
+        13         15         16         20         22         27         29 
+0.08333333 0.16666667 0.25000000 0.41666667 0.50000000 0.58333333 0.66666667 
+        30         33         34         42 
+0.75000000 0.83333333 0.91666667 1.00000000 
+\end{Soutput}
+\end{Schunk}
+\paragraph{Desviación típica y varianza}. La siguiente magnitud que vamos a calcular será la \textbf{desviacion tipica} y 
+la \textbf{varianza}.\\
+La desviación típica y la varianza se pueden calcular utilizando las funciones \textbf{sd()}
+y \textbf{var()}, pero se calculan con un denominador N-1, por lo que para lograr los mismos
+resultados que hemos obtenido a mano, crearemos nuestras propias funciones que cambien ese denominador
+N-1 por un denominador N:
+
+\begin{Schunk}
+\begin{Sinput}
+> desvtipica <-function(Radio){sqrt(sd(Radio)*sd(Radio)*(length(Radio)-1)/length(Radio))}
+> varian<- function(Radio){var(Radio)*(length(Radio)-1)/length(Radio)}
+> dump("desvtipica",file="DesviacionTipica.R")
+> dump("varian",file="Varianza.R")
+> source("DesviacionTipica.R")
+> source("Varianza.R")
+> desviaciontipica<-desvtipica(sat$Radio)
+> desviaciontipica
+\end{Sinput}
+\begin{Soutput}
+[1] 8.47996
+\end{Soutput}
+\begin{Sinput}
+> varianza<-varian(sat$Radio)
+> varianza
+\end{Sinput}
+\begin{Soutput}
+[1] 71.90972
+\end{Soutput}
+\end{Schunk}
+\subsubsection{Cálculo de medidas de ordenación, mediana y cuartiles}
+
+En este apartado vamos a proceder a calcular las \textbf{medidas de ordenacion} sobre nuestra
+columna Radio.\\
+\paragraph{Ordenación}. Lo primero que vamos a ver es como ordenar nuestra columna de manera \textbf{ascendente}
+utilizando el comando \textbf{order()}:
+
+\begin{Schunk}
+\begin{Sinput}
+> so= sat[order(sat$Radio), ]
+> so
+\end{Sinput}
+\begin{Soutput}
+        Nombre Radio
+1     Cordelia    13
+12  Luna 199U2    15
+2       Ofelia    16
+9  Luna-198U10    20
+11  Luna-999U1    20
+3       Bianca    22
+7    Rosalinda    27
+5    Desdemona    29
+10    Calibano    30
+4      Cresida    33
+8      Belinda    34
+6      Julieta    42
+\end{Soutput}
+\end{Schunk}
+Si por el contrario queremos ordenarlo de manera \textbf{descendente} simplemente debemos
+invertir la ordenación con \textbf{rev()}:
+
+\begin{Schunk}
+\begin{Sinput}
+> so= sat[rev(order(sat$Radio)), ]
+> so
+\end{Sinput}
+\begin{Soutput}
+        Nombre Radio
+6      Julieta    42
+8      Belinda    34
+4      Cresida    33
+10    Calibano    30
+5    Desdemona    29
+7    Rosalinda    27
+3       Bianca    22
+11  Luna-999U1    20
+9  Luna-198U10    20
+2       Ofelia    16
+12  Luna 199U2    15
+1     Cordelia    13
+\end{Soutput}
+\end{Schunk}
+\paragraph{Mediana}. Lo siguiente que vamos a calcular es la \textbf{mediana}. Para ello es suficiente con 
+ejecutar la función \textbf{median()} sobre nuestra columna:
+
+\begin{Schunk}
+\begin{Sinput}
+> mediant<-median(sat$Radio)
+> mediant
+\end{Sinput}
+\begin{Soutput}
+[1] 24.5
+\end{Soutput}
+\end{Schunk}
+\paragraph{Cuantiles}. Por último vamos a calcular los cuantiles. Para calcular cualquier cuantil entre 0 y 100
+debemos utilizar la función \textbf{quantile()} indicando el vector sobre el que lo queremos 
+calcular y el cuantil exacto que deseamos obtener.\\
+Por ejemplo, para calcular el cuantil 54 debemos ejecutar lo siguiente:
+
+\begin{Schunk}
+\begin{Sinput}
+> cuant54<-quantile(sat$Radio,0.54)
+> cuant54
+\end{Sinput}
+\begin{Soutput}
+ 54% 
+26.7 
+\end{Soutput}
+\end{Schunk}
+Como se puede imaginar, si se quiere calcular cualquiera de los \textbf{4 cuartiles}, basta con calcular
+los \textbf{cuantiles 25, 50, 75 y 100}. Así como si queremos calcular la \textbf{mediana} también lo podemos
+hacer calculando el \textbf{segundo cuartil}, equivalente al \textbf{cuantil 50}.
+
+
+\begin{Schunk}
+\begin{Sinput}
+> cuartil1<-quantile(sat$Radio,0.25)
+> cuartil1
+\end{Sinput}
+\begin{Soutput}
+25% 
+ 19 
+\end{Soutput}
+\begin{Sinput}
+> cuartil2<-quantile(sat$Radio,0.50)
+> cuartil2
+\end{Sinput}
+\begin{Soutput}
+ 50% 
+24.5 
+\end{Soutput}
+\begin{Sinput}
+> mediant
+\end{Sinput}
+\begin{Soutput}
+[1] 24.5
+\end{Soutput}
+\begin{Sinput}
+> cuartil3<-quantile(sat$Radio,0.75)
+> cuartil3
+\end{Sinput}
+\begin{Soutput}
+  75% 
+30.75 
+\end{Soutput}
+\begin{Sinput}
+> cuartil4<-quantile(sat$Radio,1)
+> cuartil4
+\end{Sinput}
+\begin{Soutput}
+100% 
+  42 
+\end{Soutput}
+\end{Schunk}
+
+\subsection{Pruebas sobre archivo .sav (SPSS)}
+En este apartado vamos a ejecutar las mismas funciones que ya hemos explicado, pero esta vez
+será sobre un archivo de SPPS llamado \textbf{"cardata.sav"}. Este archivo contiene datos
+de automóviles como su consumo, cilindrada, aceleración, etc.\\
+
+\subsubsection{Añadir paquetes y leer archivos SPSS}
+Para leer un archivo .txt era suficiente con ejecutar el comando \textbf{read.table()}, sin 
+embargo, para los archivos SPSS esta función no funcionará. Por ello, para poder leer un archivo
+.sav debemos importar primero una librería que nos permita hacerlo, la librería \textbf{"foreign"}.
+En este caso la librería se encuentra dentro de los archivos de R, por lo que lo único que hay que 
+hacer es instalarla:
+
+\begin{Schunk}
+\begin{Sinput}
+> library(foreign)
+\end{Sinput}
+\end{Schunk}
+Una vez instalada, podemos comprobar que se ha añadido utilizando la función \textbf{search()}:
+
+\begin{Schunk}
+\begin{Sinput}
+> search()
+\end{Sinput}
+\begin{Soutput}
+ [1] ".GlobalEnv"        "package:foreign"   "package:stats"    
+ [4] "package:graphics"  "package:grDevices" "package:utils"    
+ [7] "package:datasets"  "package:methods"   "Autoloads"        
+[10] "package:base"     
+\end{Soutput}
+\end{Schunk}
+Una vez estamos listos para leer el archivo, lo cargaremos en la variable \textbf{coches} utilizando
+la función \textbf{read.spss()}:
+
+\begin{Schunk}
+\begin{Sinput}
+> coches<-read.spss("cardata.sav")
+\end{Sinput}
+\end{Schunk}
+
+\subsubsection{Cálculo de media, desviación típica y varianza}
+Una vez tenemos cargado el archivo, vamos a operar con la columna referente al \textbf{consumo(mpg)}.
+Para simplificar la tarea guardaremos la columna en la variable \textbf{mpg}.\\
+Para empezar, vamos a calcular la media aritmetica:
+
+\begin{Schunk}
+\begin{Sinput}
+> mpg<-coches$mpg
+> med<-mean(mpg)
+> med
+\end{Sinput}
+\begin{Soutput}
+[1] NA
+\end{Soutput}
+\end{Schunk}
+Como se puede comprobar, el resultado de la \textbf{media es NA}. Esto se debe a que algunos datos de 
+la columna "mpg" tienen como valor NA y no puede sumarlos, por lo que debemos ignorar estos datos
+a la hora de calcular la media:
+
+\begin{Schunk}
+\begin{Sinput}
+> mpg<-mpg[!is.na(mpg)]
+> med<-mean(mpg)
+> med
+\end{Sinput}
+\begin{Soutput}
+[1] 28.79351
+\end{Soutput}
+\end{Schunk}
+Lo siguiente que vamos a calcular sobre esta columna son la \textbf{desviacion típica} y
+la \textbf{varianza} utilizando las funciones que hemos creado en el apartado anterior:
+ 
+\begin{Schunk}
+\begin{Sinput}
+> desviacioncoches<-desvtipica(mpg)
+> varianzacoches<-varian(mpg)
+> desviacioncoches
+\end{Sinput}
+\begin{Soutput}
+[1] 7.353219
+\end{Soutput}
+\begin{Sinput}
+> varianzacoches
+\end{Sinput}
+\begin{Soutput}
+[1] 54.06983
+\end{Soutput}
+\end{Schunk}
+
+\subsubsection{Cálculo de medidas de ordenación, mediana y cuartiles}
+Por último, vamos a calcular las medidas de ordenación (mediana y cuartiles) sobre la columna
+mpg.\\
+El cálculo sería similar al realizado anteriormente sobre los satélites:\\\\
+Mediana:
+
+\begin{Schunk}
+\begin{Sinput}
+> mediantmpg<-median(mpg)
+> mediantmpg
+\end{Sinput}
+\begin{Soutput}
+[1] 28.9
+\end{Soutput}
+\end{Schunk}
+Cuartiles:
+
+\begin{Schunk}
+\begin{Sinput}
+> cuartil1mpg<-quantile(mpg,0.25)
+> cuartil1mpg
+\end{Sinput}
+\begin{Soutput}
+  25% 
+22.55 
+\end{Soutput}
+\begin{Sinput}
+> cuartil2mpg<-quantile(mpg,0.50)
+> cuartil2mpg
+\end{Sinput}
+\begin{Soutput}
+ 50% 
+28.9 
+\end{Soutput}
+\begin{Sinput}
+> mediantmpg
+\end{Sinput}
+\begin{Soutput}
+[1] 28.9
+\end{Soutput}
+\begin{Sinput}
+> cuartil3mpg<-quantile(mpg,0.75)
+> cuartil3mpg
+\end{Sinput}
+\begin{Soutput}
+   75% 
+34.275 
+\end{Soutput}
+\begin{Sinput}
+> cuartil4mpg<-quantile(mpg,1)
+> cuartil4mpg
+\end{Sinput}
+\begin{Soutput}
+100% 
+46.6 
+\end{Soutput}
+\end{Schunk}
+
+\section{Análisis estadístico de proyectos en Kickstarter con R}
+En esta sección se muestra el proceso seguido a la hora de obtener estadísticas sobre los 
+datos de una base de datos de Kaggle, en este caso de proyectos en la plataforma Kickstarter.\\
+
+\subsection{Instalación de paquetes utilizados}
+Primero comenzaremos con la instalación de los paquetes que se han utilizado en este apartado. 
+Estos paquetes son \textbf{descr} para la frecuencia, \textbf{modeest} para la moda y \textbf{FSA}
+para la media geométrica.\\
+Para instalarlos, se siguen los siguientes pasos:\\ 
+\textbf{Paquete descr:}
+\begin{Schunk}
+\begin{Sinput}
+> install.packages("descr")
+> library(descr)
+\end{Sinput}
+\end{Schunk}
+\textbf{Paquete modeest:}
+
+\begin{Schunk}
+\begin{Sinput}
+> install.packages("BiocManager")
+> library("BiocManager")
+> BiocManager::install("genefilter")
+> install.packages("modeest")
+> library(modeest)
+\end{Sinput}
+\end{Schunk}
+\textbf{Paquete FSA}:
+
+\begin{Schunk}
+\begin{Sinput}
+> install.packages("FSA")
+> library(FSA)
+\end{Sinput}
+\end{Schunk}
+El paquete modeest, como se puede observar, requiere de la función \textbf{genefilter} del paquete
+\textbf{BiocManager}. Después de tener instalados los paquetes, se puede proceder al análisis estadístico
+de los datos.\\
+
+\subsection{Preparación del entorno}
+Lo primero que hacemos es preparar el entorno de trabajo. Para ello, se lee el archivo de datos, el 
+cual viene dado en formato .csv. Para leer este tipo de archivo, se hace uso de la instrucción del 
+paquete estándar de R \textbf{read.csv}. Antes de esto, a modo opcional, se puede comprobar si el archivo
+a leer está en el directorio actual con la instrucción \textbf{dir()}.
+
+Después de esto, ya podemos trabajar con el fichero en cuestión. Ahora utilizamos la función \textbf{colnames}
+para obtener el nombre de las filas cargadas y poder aplicar las funciones estadísticas. 
+\begin{Schunk}
+\begin{Sinput}
+> colnames(ksp)
+\end{Sinput}
+\begin{Soutput}
+ [1] "ID"               "name"             "category"         "main_category"   
+ [5] "currency"         "deadline"         "goal"             "launched"        
+ [9] "pledged"          "state"            "backers"          "country"         
+[13] "usd.pledged"      "usd_pledged_real" "usd_goal_real"   
+\end{Soutput}
+\end{Schunk}
+Una vez elegidas las columnas a tratar, podemos crear un atajo para no tener que llamar a esa columna por su nombre completo
+dentro del fichero. Esto se puede lograr con la siguiente instrucción, en este caso aplicada a la columna \textbf{goal}, 
+aunque el proceso es el mismo para cualquier otra columna.
+\begin{Schunk}
+\begin{Sinput}
+> goals = ksp$goal 
+\end{Sinput}
+\end{Schunk}
+Por último, se utilizarán las funciones de varianza y desviación típica del anterior ejercicio de la práctica, previamente importadas.\\
+
+\subsection{Análisis de datos}
+En esta sección se analizarán los datos elegidos mediante técnicas estadísticas. El primer bloque de datos 
+a analizar pertenece a los objetivos de apoyo monetario de los proyectos de Kickstarter. \\
+\subsubsection{Calculo de media, desviacion tipica y varianza}
+\textbf{Media aritmética}:
+
+\begin{Schunk}
+\begin{Sinput}
+> mean(goals)
+\end{Sinput}
+\begin{Soutput}
+[1] 49080.79
+\end{Soutput}
+\end{Schunk}
+\textbf{Media geométrica}, para la cual utilaremos el paquete FSA:
+
+\begin{Schunk}
+\begin{Sinput}
+> geomean(goals)
+\end{Sinput}
+\begin{Soutput}
+[1] 5687.223
+\end{Soutput}
+\end{Schunk}
+\textbf{Desviacion tipica}:
+
+\begin{Schunk}
+\begin{Sinput}
+> desvGoals<-desvtipica(goals)
+> desvGoals
+\end{Sinput}
+\begin{Soutput}
+[1] 1183390
+\end{Soutput}
+\end{Schunk}
+\textbf{Varianza}:
+
+\begin{Schunk}
+\begin{Sinput}
+> varianGoals<-varian(goals)
+> varianGoals
+\end{Sinput}
+\begin{Soutput}
+[1] 1.400411e+12
+\end{Soutput}
+\end{Schunk}
+\textbf{Moda}, utilizando el paquete \textbf{modeest}:
+
+\begin{Schunk}
+\begin{Sinput}
+> mlv(goals, method = "mfv")
+\end{Sinput}
+\begin{Soutput}
+[1] 5000
+\end{Soutput}
+\end{Schunk}
+En el método el valor es mfv porque es el valor más frecuente (most frequent value).\\\\
+\textbf{Mínimo absoluto}:
+
+\begin{Schunk}
+\begin{Sinput}
+> min(goals)
+\end{Sinput}
+\begin{Soutput}
+[1] 0.01
+\end{Soutput}
+\end{Schunk}
+\textbf{Máximo absoluto}:
+
+\begin{Schunk}
+\begin{Sinput}
+> max(goals)
+\end{Sinput}
+\begin{Soutput}
+[1] 1e+08
+\end{Soutput}
+\end{Schunk}
+\textbf{Rango}:
+
+\begin{Schunk}
+\begin{Sinput}
+> range(goals)
+\end{Sinput}
+\begin{Soutput}
+[1] 1e-02 1e+08
+\end{Soutput}
+\end{Schunk}
+Las frecuencias las vamos a mostrar sobre las 10 primeras filas de datos, ya que si mostrasemos
+todos los datos el documento quedaría demasiado extenso.\\
+\textbf{Frecuencia absoluta y relativa}:
+\begin{center}
+
+\begin{Schunk}
+\begin{Sinput}
+> frecuencias<-freq(goals)[1:10,]
+> frecuencias
+\end{Sinput}
+\begin{Soutput}
+     Frequency      Percent
+0.01         2 0.0005281769
+0.15         1 0.0002640885
+0.5          1 0.0002640885
+1          430 0.1135580374
+1.85         1 0.0002640885
+2           24 0.0063381230
+3           20 0.0052817692
+4            9 0.0023767961
+5          142 0.0375005612
+6            9 0.0023767961
+\end{Soutput}
+\begin{Sinput}
+> 
+\end{Sinput}
+\end{Schunk}
+\includegraphics{memoria_p1-038}
+\end{center}
+\textbf{Frecuencia absoluta acumulada}:
+
+\begin{Schunk}
+\begin{Sinput}
+> cumsum(table(goals))[1:10]
+\end{Sinput}
+\begin{Soutput}
+0.01 0.15  0.5    1 1.85    2    3    4    5    6 
+   2    3    4  434  435  459  479  488  630  639 
+\end{Soutput}
+\end{Schunk}
+\textbf{Frecuencia relativa acumulada}:
+
+\begin{Schunk}
+\begin{Sinput}
+> frecrel(goals)[1:10]
+\end{Sinput}
+\begin{Soutput}
+Radio
+        0.01         0.15          0.5            1         1.85            2 
+5.281769e-06 2.640885e-06 2.640885e-06 1.135580e-03 2.640885e-06 6.338123e-05 
+           3            4            5            6 
+5.281769e-05 2.376796e-05 3.750056e-04 2.376796e-05 
+\end{Soutput}
+\end{Schunk}
+
+\subsubsection{Cálculo de medidas de ordenación, mediana y cuartiles}
+\textbf{Mediana} (equivalente al segundo cuartil):
+\begin{Schunk}
+\begin{Sinput}
+> median(goals)
+\end{Sinput}
+\begin{Soutput}
+[1] 5200
+\end{Soutput}
+\end{Schunk}
+\textbf{Primer y tercer cuartil:}
+\begin{Schunk}
+\begin{Sinput}
+> cuartil1<-median (goals [which (goals <= median (goals))])	
+> cuartil1
+\end{Sinput}
+\begin{Soutput}
+[1] 2000
+\end{Soutput}
+\begin{Sinput}
+> cuartil3<-median (goals [which (goals >= median (goals))])	
+> cuartil3
+\end{Sinput}
+\begin{Soutput}
+[1] 16000
+\end{Soutput}
+\end{Schunk}
+A la vista de estas estadísticas, se puede llegar a la conclusión de que los datos están muy dispersos entre sí,
+ya que la desviación típica es muy grande. Por lo tanto, la media no da un valor significativo de la población.\\
+Estas mismas estadísticas se pueden aplicar a otras columnas, como la de \textbf{backers} o la de \textbf{pledged}.
+En otras columnas como \textbf{category} o \textbf{country}, no se pueden aplicar todas las medidas, ya que los datos no son numéricos,
+pero se podrían aplicar las funciones de moda o frecuencia absoluta y relativa.
+
+\end{document}

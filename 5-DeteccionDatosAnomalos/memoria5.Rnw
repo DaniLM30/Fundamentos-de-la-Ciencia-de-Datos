@@ -1,0 +1,373 @@
+\documentclass [a4paper] {article}
+
+\usepackage[utf8]{inputenc}
+
+\title{Practica 5: Fundamentos de la Ciencia de Datos}
+\author{
+  Daniel Lopez Moreno\\
+  \and
+  Alejandro Fernandez Maceira\\
+  \and
+  Alvaro Maestre Santa
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Análisis de detección de datos anómalos}
+En esta parte vamos a realizar cuatro ejercicios con ayuda del profesor en el que realizaremos 
+un análisis de detección de datos anómalos.
+
+\subsection{Ejercicio 1: K-vecinos}
+En este apartado vamos a utilizar el algoritmo K-vecinos, utilizando la muestra dada en clase,
+para así obtener los outliers.
+Para ello cargamos los datos, en una matriz:
+
+<<>>=
+(muestra = matrix(c(4,4,4,3,5,5,1,1,5,4),2,5))
+@
+
+Como podemos observar, son 5 pares de datos a analizar. Seguidamente realizamos la transpuesta de
+la matriz:
+
+<<>>=
+(muestra = t(muestra))
+@
+
+Calculamos la distancia entre todos los puntos, este calculo, se hace con dist y posteriormente
+lo convertimos en una matriz con as.matrix
+
+<<>>=
+(distancias = as.matrix(dist(muestra)))
+@
+
+Como tenemos 5 pares de datos, y hemos calculado las distancias de cada par de datos, tenemos un total
+de 25 operaciones de distancia, por lo tanto, vamos a crear una matriz 5x5 para tener una mejor
+visualización de los datos calculados:
+
+<<>>=
+(distancias = matrix(distancias,5,5))
+@
+
+Ahora ordenamos la matriz, que hemos creado con las distancias en el paso anterior, según los valores
+de las columnas. Esto se consigue con la función sort y con un bucle, que iremos recorriendo todas
+las columnas para así ordenarlas con la función mencionada anteriormente:
+
+<<>>=
+for(i in 1:5){
+	distancias[,i] = sort(distancias[,i])
+};
+(distanciasordenadas = distancias)
+@
+
+Ahora lo que hacemos es que para los valores de la 4 fila mayores de 2.5, imprimiremos que es un outlier
+o un suceso anómalo. Para ello creamos un bucle que ira recorriendo todas las columnas de la matriz
+y accediendo al valor de la fila 4 para ver si es mayor que 2.5:
+
+<<>>=
+for(i in 1:5){
+	if(distanciasordenadas[4,i]>2.5){
+		print(i);print("es un suceso anómalo o outlier")
+	}
+}
+@
+
+Como podemos observar, podemos ver como muestra que el par 4 es un outlier.
+
+\subsection{Ejercicio 2: Método caja y bigotes}
+
+En este apartado vamos a realizar un análisis de detección de datos anómalos utilizando medidas de ordenación
+sobre la resistencia, empleando el algoritmo \textbf{caja y bigotes} sobre la muestra 2. Por lo tanto
+lo primero de todo es cargar los datos, hacemos la transpuesta y añadimos nombres a las columnas con 
+dimnames, en este caso será \textbf{"r" y "d"}, que es resistencia y densidad respectivamente:
+
+<<>>=
+muestra = t(matrix(c(3,2,3.5,12,4.7,4.1,5.2,4.9,7.1,6.1,6.2,5.2,14,5.3),2,7, dimnames = list(c("r","d"))))
+muestra
+@
+
+Una vez cargado los datos, creamos una estructura de datos de dos dimensiones con \textbf{frame}:
+
+<<>>=
+(muestra = data.frame(muestra))
+@
+
+Ahora vamos a proceder a realizar el algoritmo \textbf{caja y bigotes}, para ello utilizaremos la
+función boxplot, cuyos parámetros son los siguientes:
+
+\begin{itemize} 
+	\item \textbf{Primer parámetro}:  introducimos un vector númerico, el cuál nos dará un diagrama
+	de caja sobre esa variable.
+	\item \textbf{Segundo parámetro}: introducimos el rando, es decir, el valor del grado de outlier,
+	en este caso, se elige arbitrariamente.
+	\item \textbf{Tercer parámetro}: introducimos un booleano para que nos muestre la gráfica o no,
+	en este caso, lo ponemos a false, debido a que lo que nos interesa son los cálculos.
+\end{itemize}
+
+<<>>=
+(boxplot(muestra$r, range=1.5, plot=FALSE))
+@
+
+Ahora calculamos los cuartiles, con la función quantile, que el primer parámetro es el vector de datos
+y el segundo parámetro es el porcentaje, es decir, 0.25 es el primer cuartil y 0.75 el tercero. El 
+resultado del primer cuartil es:
+
+<<>>=
+(cuar1 <- quantile(muestra$r, 0.25))
+@
+
+El del tercer cuartil es:
+<<>>=
+(cuar3 <- quantile(muestra$r, 0.75))
+@
+
+Ahora aplicamos la fórmula del rango, que como su propio nombre indica, nos indicará que todo lo que sea 
+mayor a este rango, será un outlier o suceso anómalo. El resultado es el siguiente:
+
+<<>>=
+(int = c(cuar1-1.5*(cuar3-cuar1), cuar3+1.5*(cuar3-cuar1)))
+@
+
+El rango obtenido es: \textbf{0.275-10.475.}
+
+Ahora recorremos el vector de datos y vamos mostrando aquello datos que sean mayores que el rango calculado
+previamente, mostrando así, un mensaje informativo, diciendo si es un outlier o un suceso anómalo. El resultado
+obtenido es el siguiente:
+
+<<>>=
+for(i in 1:length(muestra$r)){
+	if(muestra$r[i]<int[1] || muestra$r[i]>int[2]){
+		print("el suceso"); print(i); print(muestra$r[i]);
+		print("es un suceso anómalo o outlier")
+	}
+}
+@
+
+Los sucesos anómalos son: \textbf{7 y 14}
+
+\subsection{Ejercicio 3: Desviación Típica.}
+En este apartado, nos piden realizar un análisis de detección de datos anómalos utilizando medidas de dispersión
+sobre la densidad, desviación típica sobre la misma muestra del apartado anterior.
+
+En primer lugar, calculamos lso vectores sobre los datos, para ello se hace mediante la siguiente formula:
+\begin{itemize} 
+	\item \textbf{c}:  concatenamos los vectores.
+	\item \textbf{mean}: función que calcula la media.
+	\item \textbf{sd}: función que calcula la desviación típica.
+\end{itemize}
+
+<<>>=
+(des = c(mean(muestra$d)-2*sd(muestra$d),mean(muestra$d)+2*sd(muestra$d)))
+@
+
+Seguidamente, una vez obtenido el rango, vemos que valores son outliers o sucesos anómalos, para aquellos valores
+que no estén en ese rango. El resultado es el siguiente:
+
+<<>>=
+for(i in 1:length(muestra$r)){
+	if(muestra$r[i]<des[1] || muestra$r[i]>des[2]){
+		print("el suceso"); print(i); print(muestra$r[i]);
+		print("es un suceso anómalo o outlier")
+	}
+}
+@
+
+Como podemos observar los outliers o sucesos anómalos obtenidos son \textbf{7 y 14}
+
+\subsection{Ejercicio 4: Error estándar}
+En este apartado nos piden realizar un análisis de detección de datos anómalos sobre la regresión de las
+variables, densidad en función de la resistencia, utilizando el error estándar de los residuos sobre 
+la misma muestra del ejercicio 2.
+
+En primer lugar, vamos a corregir el resultado, hay que mencionar, que hay muchas maneras de corregir los
+errores de resultado, pero nosotros vamos a utilizar la que nos ha dicho el profesor, usando la siguiente
+fórmula:
+\begin{itemize}
+	\item \textbf{sqrt}: función que calcula la raíz cuadrada.
+	\item \textbf{var}: función que calcula la varianza muestral o cuasi-varianza.
+	\item \textbf{length}: función que te devuelve un entero cuyo valor es la longitud total del
+	vector de datos.
+\end{itemize}
+
+<<>>=
+(sdd = sqrt(var(muestra$d)*((length(muestra$d)-1/length(muestra$d)))))
+@
+
+Ahora calculamos los residuos, para ello usamos la función \textbf{lm()}, la cual, genera un modelo de 
+regresión lineal por mínimos cuadrados en el que la variable es \textbf{muestra\$d} y el predictor es 
+\textbf{muestra\$r}.
+
+<<>>=
+(dfr = lm(muestra$d~muestra$r))
+@
+
+Ahora para visualizar los principales parámetros generados, utilizamos la función \textbf{summary()}:
+
+<<>>=
+(summary (dfr))
+@
+
+Como nos muestra muchisima información y solo nos interesa el valor de los residuos calculados, ponemos
+el siguiente comando:
+
+<<>>=
+(res = summary(dfr)$residuals)
+@
+
+Como podemos observar, nos sale un total de siete residuos. Posteriormente, calculamos la desviación estándar,
+cuyo valor se utilizará para clasificar si es un outlier o suceso anómalo. La formula es la raiz cuadrada
+del sumatorio de cada residuo elevado al cuadrado entre el total de residuos que haya:
+
+<<>>=
+(sr = sqrt (sum(res^2)/7))
+@
+
+Ahora calculamos los outliers, recorriendo cada uno de los residuos, y viendo si es mayor que el doble de la
+desviación estándar (sr), calculado previamente, será un outlier o suceso anómalo:
+
+<<>>=
+for(i in 1:length(res)){
+	if(res[i]>2*sr){
+		print("el suceso");print(i);print(muestra$r[i]);
+		print("es un suceso anómalo o outlier")
+	}
+}
+@
+
+Como podemos ver los sucesos \textbf{2 y 3.5} son sucesos anómalos o outlier.
+
+\section{Desarrollo por parte del grupo}
+
+En este apartado realizaremos detección de datos anómalos de una manera distinta a la estudiada en la clase
+de laboratorio. Esta vez, realizaremos el análisis sobre una base de datos que contiene información relativa
+a las estadísticas de los \textbf{videojuegos más vendidos} hasta 2016. 
+
+Lo primero que debemos hacer es instalar las librerias que consideramos necesarias para el desarrollo de
+este apartado:
+
+<<>>=
+install.packages("dbscan")
+install.packages("fpc")
+library("dbscan")
+library("fpc")
+@
+
+Ahora, leeremos el archivo \textbf{"videogames.csv"} y lo adaptaremos para poder trabajar con él.\\
+Para empezar con la adaptación eliminaremos las filas con valor NA para evitar problemas.\\
+A continuación, como contamos con más de \textbf{16000 filas}, reduciremos la cantidad de datos al 
+\textbf{Top 50 Ventas} para facilitar la tarea de lectura, para ello utilizaremos la función \textbf{head}:
+
+<<>>=
+videogames<-read.csv("videogames.csv")
+videogames<-videogames[complete.cases(videogames),]
+videogames<-head(videogames,50)
+@
+
+Una vez tenemos los datos adaptados, procedemos a realizar el análisis por distintos métodos:
+
+\subsection{Análisis con k-Vecinos}
+
+Para realizar el análisis con k-Vecinos utilizaremos algunas funciones de los paquetes \textbf{"dbscan"} y
+\textbf{"fpc"}, como \textbf{kNNdisplot} y la clasificación \textbf{dbscan} que ya hemos utilizado en la práctica
+4 realizada con anterioridad.
+
+Lo primero que debemos hacer es aislar las 2 variables sobre las que vamos a calcular las distancias. En el caso
+de nuestra base de datos usaremos el número de ventas total (\textbf{Global\_Sales}) y las valoraciones de los
+usuarios (\textbf{User\_Score}):
+
+<<>>=
+sales<-videogames$Global_Sales
+score<-videogames$User_Score
+data<-cbind(sales,score)
+@
+
+Ya tenemos los datos aislados, ahora debemos realizar el análisis de k-Vecinos y comprobar a partir de cuantos puntos
+aumenta drásticamente la distancia. Utilizaremos la distancia a partir del \textbf{vecino 3}:
+
+<<fig=TRUE>>=
+kNNdistplot(data, k=3)
+abline(h=10, col="red")
+@
+
+Tras hacer el análisis, podemos ver que a partir del \textbf{valor 10} la distancia aumenta, por lo que debemos hacer
+la \textbf{dbscan} con ese valor y comprobaremos como se clusterizan finalmente los valores y cuales de ellos quedan 
+excluidos, los \textbf{outliers}:
+
+<<fig=TRUE>>=
+clasDBSCAN <- fpc::dbscan(data, eps = 10, MinPts = 4)
+hullplot(data, clasDBSCAN$cluster)
+@
+
+Claramente se han definido 2 clusters, un gran cluster \textbf{rojo} y otro pequeño cluster \textbf{verde}. Además, 
+podemos ver \textbf{3 puntos negros}, correspondientes a \textbf{outliers}. Estos datos corresponden a los siguientes
+videojuegos:
+
+<<>>=
+videogames<-cbind(clasDBSCAN$cluster, videogames)
+(outliers = subset(videogames,videogames[,1] == 0))
+@
+
+\begin{itemize}
+	\item \textbf{Wii Sports}: Este videojuego tiene aproximadamente las mismas valoraciones por parte de los usuarios
+	que el resto de videojuegos del cluster \textbf{rojo}, sin embargo se considera outlier por su excesiva diferencia
+	en el número de ventas globales.
+	\item \textbf{CoD Black Ops II (PS3)}: Este videojuego tiene un número de ventas parecido a los existentes en los
+	2 cluster que hemos identificado. Sin embargo, se considera outlier ya que no tiene suficiente valoración como para
+	pertenecer al \textbf{cluster rojo}, pero tiene demasiada como para pertenecer al \textbf{cluster verde}
+	\item \textbf{CoD Black Ops II (Xbox 360)}: Con este videojuego ocurre exactamente lo mismo que con el anterior, ya que
+	se trata del mismo juego pero para una consola distinta.
+\end{itemize}
+
+Un método para comprobar el dato más extremo es la función \textbf{car::outlierTest}, la cual devuelve el valor con más probabilidades
+de ser un outlier de forma estadística empleando la regresión. Esta función viene por defecto en R. 
+Lo primero que hay que hacer para poder obtener el valor outlier es convertir la matriz de datos a tipo \textbf{frame}, para después hacer
+una regresión de esos datos. Esa regresión es la que necesita la función \textbf{car::outlierTest}. 
+
+<<>>=
+datosFrame=data.frame(data)
+carOut=lm(datosFrame)
+car::outlierTest(carOut)
+@
+
+Como se puede observar, el dato que es un \textbf{outlier} es el videojuego \textbf{Wii Sports}, ya que el número que aparece es el 1,
+el cual coincide con el primer valor del data frame. Este resultado concuerda con el método \textbf{k-vecinos}, tal y como se había 
+obtenido previamente.
+
+Además de la función anterior, existe otro paquete llamado \textbf{outliers}, el cual contiene funciones para comprobar los outliers en 
+un \textbf{data frame}. Este método emplea la media de los datos para ver cuál es el dato anómalo. 
+
+<<>>=
+install.packages("outliers")
+library(outliers)
+outlier(datosFrame)
+@
+
+En este caso, el valor obtenido aparece dividido en outlier de \textbf{ventas} y outlier de \textbf{puntuación}, que son las dos columnas 
+que forman el \textbf{data frame}. Analizando el valor de la columna de ventas, podemos ver que el valor obtenido corresponde al juego 
+\textbf{Wii Sports}, como hemos obtenido en los previos métodos de análisis de outliers. En la columna de puntuación el valor obtenido es
+\textbf{25.00}, que corresponde, si nos fijamos en el \textbf{data frame}, a los videojuegos \textbf{Call of Duty Ghosts} en PS3 y en Xbox,
+resultado que también coincide con el análisis de \textbf{k-vecinos} realizado previamente.
+
+\subsection{Problemas que hemos encontrado y soluciones}
+\subsubsection{Cambio de variables a analizar}
+
+Al comenzar el desarrollo por parte del grupo las distancias para el algoritmo k-vecinos iban a utilizar las variables
+\textbf{Global\_Sales y Critic\_Score}. Sin embargo, tras probarlo pudimos ver que las notas de la crítica siempre eran altas
+y nunca bajaban del valor 50, por lo que todos los juegos quedaban acumulados en el mismo cluster y el único \textbf{outlier}
+que podiamos detectar era Wii Sports debido a su elevado número de ventas.\\
+Por ello, optamos por eliminar dicho videojuego de la lista para ver si el resto de videojuegos se separaban en distintos 
+cluster y quedaba algún otro outlier expuesto, pero no dio resultado.\\
+Por lo tanto, finalmente cambiamos la variable \textbf{Critic\_Score} por \textbf{User\_Score} ya que los usuarios eran más críticos
+y si existian algunas notas por debajo de 50, dejando descubiertos más clusters y outliers.
+
+\subsubsection{Cambio de Top 100 a Top 50}
+
+Inicialmente el análisis se iba a realizar sobre el \textbf{Top 100} videojuegos en número de ventas, pero nos dimos cuenta de que
+\textbf{entre el Top 51 y el Top 100} la mayoría de videojuegos se estancaban alrededor del mismo valor de ventas, simplemente variando sus 
+puntuaciones, \textbf{creando una linea recta} en nuestro gráfico que no aportaba nada a la clasificación.\\
+Por lo tanto, decidimos reducir el espectro y analizar solamente los \textbf{primeros 50 videojuegos más vendidos} en vez de los 
+100 primeros.
+
+
+\end{document}

@@ -1,0 +1,260 @@
+\documentclass [a4paper] {article}
+
+\usepackage[utf8]{inputenc}
+
+\title{Practica 1: Fundamentos de la Ciencia de Datos}
+\author{
+  Daniel Lopez Moreno\\
+  \and
+  Alejandro Fernandez Maceira\\
+  \and
+  Alvaro Maestre Santa
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Analisis de asociacion de datos con R}
+En este apartado vamos a realizar un análisis de datos con ayuda del profesor. 
+Este análisis se resolverá mediante el algoritmo apriori. Los datos utilizados
+son los que hemos utilizado en clase de teoría, es decir, los de la muestra. Después
+se deberá de obtener las asociaciones cuyo soporte \textbf{sea igual o superior al 50\%} y cuya
+\textbf{confianza sea igual o superior al 80\%}.\\
+En primer lugar, debemos de tener la librería \textbf{arules}, si no la tenemos, tendremos que proceder a 
+instalarla. También añadiremos la libreria \textbf{arulesViz} para mostrar las asociaciones de forma gráfica
+más adelante.
+
+<<>>=
+install.packages("arules")
+install.packages("arulesViz")
+library(arules)
+library("arulesViz")
+@
+
+Nuestras cestas de la compra disponibles sobre las que vamos a actuar son las siguientes:
+
+<<>>=
+c1 = c("pan","agua","leche","naranjas")
+c2 = c("pan","agua","café","leche")
+c3 = c("pan","agua","leche")
+c4 = c("pan","café","leche")
+c5 = c("pan","agua")
+c6 = c("leche")
+@
+
+A continuación, procedemos a generar una matriz de 0s y 1s, donde sobre cada elemento de cada cesta 1 significa que se ha comprado y 0 
+significa que no:
+
+<<>>=
+muestra<-Matrix(c(1,1,0,1,1,1,1,1,1,0,1,1,0,1,0,1,0,1,1,0,1,1,0,0,0,0,0,0,1,0),6,5,
+byrow=T,dimnames=list(c("suceso1","suceso2","suceso3","suceso4","suceso5","suceso6"),
+c("Pan","Agua","Cafe","Leche","Naranjas")),sparse=T)
+muestra
+@
+
+Hacemos la transpuesta, para posteriormente generar las transacciones de nuestra muestra:
+
+<<>>=
+muestraCMatriz<-as(muestra,"nsparseMatrix")
+transpuestaMatriz <-t(muestraCMatriz)
+transpuestaMatriz
+@
+
+Ahora generamos las transacciones de nuestra muestra:
+
+<<>>=
+transacciones<-as(transpuestaMatriz, "transactions")
+summary(transacciones)
+@
+
+A continuación, procedemos a utilizar el algoritmo \textbf{Apriori}, en este caso ponemos el porcentaje del soporte
+y la confianza
+
+<<>>=
+asociaciones<-apriori(transacciones, parameter = list(support=0.5,confidence=0.8))
+inspect(asociaciones)
+@
+
+Como podemos observar en el resultado del algoritmo apriori, hemos encontrado 7 asociaciones.
+Por lo tanto, podemos concluir en base al mínimo de soporte del 50\% y al mínimo de confianza 80%
+lo siguiente:
+
+\begin{itemize}
+\item \textbf{(Agua)->(Pan)}:Cuando alguien compra \textbf{Agua},
+                                adquirirá también \textbf{Pan}.
+\item \textbf{(Pan)->(Agua)}:Cuando alguien compra \textbf{Pan},
+                                adquirirá también \textbf{Agua}.
+\item \textbf{(Leche)->(Pan)}:Cuando alguien compra \textbf{Leche},
+                                adquirirá también \textbf{Pan}.
+\item \textbf{(Pan)->(Leche)}:Cuando alguien compra \textbf{Pan},
+                                adquirirá también \textbf{Leche}.
+\item \textbf{(Agua, Leche)->(Pan)}:Cuando alguien compra \textbf{Agua y Leche},
+                                adquirirá también \textbf{Pan}.
+\end{itemize}
+
+Los demas casos no se muestran, ya que no cumplen con los umbrales establecidos para la confianza y el
+soporte
+
+
+\section{Desarrollo por parte del grupo}
+
+\subsection{Analisis de datos a través de un .txt}
+En este apartado vamos a realizar un análisis de datos similar al 
+del apartado anterior, pero esta vez los datos los leeremos de 
+un archivo .txt y cambiaremos el umbral de \textbf{soporte de 50\% a 40\%}, 
+y el umbral de \textbf{confianza de 80\% a 90\%}.\\
+Empezaremos asignando la matriz del archivo .txt a 
+la variable \textbf{ventas}:
+
+<<>>=
+ventas<-as.matrix(read.table("ventaCoches.txt"))
+ventas
+@
+
+A continuación, vamos a generar nuestra matriz dispersa, una muestra a partir de dicha matriz y la transpuesta de esta muestra:
+
+<<>>=
+ventasM<-Matrix(ventas,sparse=T)
+muestraVentas<-as(ventasM,"nsparseMatrix")
+transVentas <-t(muestraVentas)
+transVentas
+@
+
+Ahora vamos a generar todas las transacciones posibles que
+existan en nuestra muestra:
+
+<<>>=
+transacciones<-as(transVentas, "transactions")
+summary(transacciones)
+@
+
+Y por último, procedemos a utilizar el algoritmo \textbf{Apriori}
+para filtrar solo aquellas asociaciones con un mínimo de soporte
+del 40\% y un mínimo de confianza del 90\%:
+
+<<>>=
+asociaciones<-apriori(transacciones, parameter = list(support=0.4,confidence=0.9))
+inspect(asociaciones)
+@
+
+Como se puede comprobar por la salida del algoritmo Apriori, hemos
+encontrado 3 asociaciones. Hemos determinado con un mínimo de soporte
+del 40\% y de confianza del 90\% que:
+
+\begin{itemize}
+\item \textbf{(Con)->(Far)}: Cuando alguien compra \textbf{Control de velocidad}, 
+                             adquirirá también \textbf{Faros Xenon}.
+\item \textbf{(Blu)->(Far)}: Cuando alguien compra \textbf{Bluetooth}, adquirirá
+                             también \textbf{Faros Xenon}.
+\item \textbf{(Blu,Con)->(Far)}:Cuando alguien compra \textbf{Bluetooth y Control de velocidad},
+                                adquirirá también \textbf{Faros Xenon}.
+\end{itemize}
+
+Entre el resto de los extras disponibles en los coches no hemos encontrado
+ninguna asociación. Es probable que si se rebajasen los umbrales de
+soporte y confianza apareciese alguna asociación más.
+
+\subsection{Análisis con modificaciones}
+En esta parte de la práctica se analizará una base de datos sobre dónde viven las personas. Para ello se
+obtendrán el soporte y confianza mediante el algoritmo apriori y así saber qué grupos son más probables que 
+vivan en ciudad o en campo. 
+La librería utilizada para todo el apartado es \textbf{arules}, la cual ya se ha instalado previamente en otros 
+ejercicios.
+Lo primero que hay que hacer es leer el archivo de bases de datos. En este caso es un fichero .csv llamado 
+data.csv. Como siempre, se utiliza la instrucción \textbf{read.csv}. 
+<<>>=
+data = read.csv("basic_income.csv")
+@
+Sin embargo, esta base de datos contiene columnas que no nos interesan para el análisis. 
+Para saber qué columnas nos interesan, la instrucción \textbf{colnames} nos dirá el nombre de las columnas 
+de la base de datos. 
+<<>>=
+colnames(data)
+@
+Ahora, se pueden eliminar las columnas que no necesitamos. Esto se consigue añadiendo lo siguiente
+en la instrucción \textbf{read.csv}.
+<<>>=
+data = read.csv("basic_income.csv")[,c('gender','rural','dem_education_level',
+'dem_has_children','age_group')]
+@
+Las columnas con las que nos quedamos son las siguientes:
+\begin{itemize}
+\item \textbf{gender}: El género de la persona, que puede ser \textbf{male} 
+			(hombre) o \textbf{female} (mujer).
+\item \textbf{rural}: El lugar de residencia, la ciudad \textbf{(urban)} 
+			o el campo \textbf{(rural)}.
+\item \textbf{dem-education-level}: El nivel de estudios de la persona, que puede ser
+			\textbf{low} (bajo), \textbf{medium} (medio) o \textbf{high} (alto).
+\item \textbf{dem-has-children}: Si la persona tiene hijos, \textbf{yes} o \textbf{no}.
+\item \textbf{age-group}: El rango de edad de la persona, que puede ser \textbf{14-25},
+			\textbf{26-39},\textbf{40-65}.
+\end{itemize}
+Una vez que tenemos el fichero con las columnas que nos interesan, debemos guardarlo en un archivo .csv para 
+poder utilizarlo posteriormente en una instrucción especial. Esto se consigue con la \textbf{write.csv}. Esta
+instrucción toma como parámetros la variable con el fichero modificado (data), el nombre del fichero que queremos
+y un parámetro que indica si la primera fila contendrá los nombres de las columnas o no. 
+<<>>=
+write.csv(data,"basic_income2.csv",row.names=T)
+@
+Ahora, ya podemos generar las transacciones necesarias para pasárselas al algoritmo apriori. Las transacciones se
+realizan con la instrucción \textbf{read.transactions} de la librería \textbf{arules}. 
+<<>>=
+txn = read.transactions(file='basic_income2.csv',format='basket',sep=',',cols=1,rm.duplicates=TRUE)
+@
+Los parámetros son la ruta del archivo recién creado en el paso anterior; la forma del archivo, que puede ser single
+o basket, en este caso basket ya que cada línea es una transacción separada por comas; el método de separación; 
+y si la primera columna está formada por un id o número de transacción, no la tiene en cuenta para realizar las transacciones.
+Después de que R genere las transacciones que se hayan encontrado en la base de datos, hay que aplicar el algoritmo 
+apriori para obtener el soporte y confianza de las asociaciones. En este caso, el soporte umbral que queremos será
+0.2, y la confianza de 0.7, ya que con más soporte no hay muchas asociaciones que nos interesen.
+<<>>=
+tn = apriori(txn,parameter=list(sup=0.2,conf=0.7))
+@
+Ahora solo falta mostrar estos resultados con la instrucción \textbf{plot} e \textbf{inspect}.
+<<fig=TRUE>>=
+plot(tn, method = "graph")
+@
+
+Con el método plot podemos mostrar gráficamente todas las asociaciones que hemos creado con el algoritmo Apriori, utilizamos el método
+"graph" para crear un grafo de nodos. Como se puede observar, la mayoria de las asociaciones marcan el campo \textbf{urban}, algunas de ellas
+combinadas en un nodo intermedio común que posteriormente apunta al campo final.
+
+<<>>=
+inspect(tn)
+@
+
+Las asociaciones obtenidas son las siguientes
+\begin{itemize}
+\item \textbf{(26-39)->(urban)}: Si alguien está en el grupo de edad \textbf{26-39},
+                                vivirá en \textbf{ciudad}.
+\item \textbf{(high)->(urban)}: Si el nivel de estudios es \textbf{alto},
+                                vivirá en \textbf{ciudad}.
+\item \textbf{(medium)->(urban)}: Si el nivel de estudios es \textbf{medio},
+                                vivirá en \textbf{ciudad}.
+\item \textbf{(no)->(urban)}: Si no tienen \textbf{hijos},
+                                vivirá en \textbf{ciudad}.
+\item \textbf{(40-65)->(yes)}: Si alguien está en el grupo de edad \textbf{40-65},
+                                tendrá \textbf{hijos}.
+\item \textbf{(yes)->(urban)}: Si alguien tiene \textbf{hijos},
+                                vivirá en \textbf{ciudad}.
+\item \textbf{(male)->(urban)}: Si es \textbf{hombre},
+                                vivirá en \textbf{ciudad}.
+\item \textbf{(40-65,urban)->(yes)}: Si está entre \textbf{40-65} y vive en \textbf{ciudad},
+                                 tendrá \textbf{hijos}.
+\item \textbf{(40-65,male)->(urban)}: Si está entre \textbf{40-65} y es \textbf{hombre},,
+                                vivirá en \textbf{ciudad}.
+\end{itemize}
+A la vista de estos resultados, podemos llegar a varias conclusiones según la regla que analicemos. 
+Por lo general, las asociaciones con mayor soporte y confianza pertenecen a los hombres y la ciudad, siendo
+la asociación hombre -> ciudad la que más soporte tiene entre todas las analizadas. Específicamente, podemos
+decir que si alguien está entre 40-65 años, tendrá hijos, que es otra asociación con bastante soporte.
+Por último, si establecemos el umbral de soporte y confianza en valores de ejercicios previos(0.5 y 0.8), 
+obtenemos lo siguiente.
+<<>>=
+tn = apriori(txn,parameter=list(sup=0.5,conf=0.8))
+inspect(tn)
+@
+No hay asociaciones con soporte mayor a 0.5, lo que indica que no se puede estar muy seguro de la probabilidad de 
+ocurrencia de un evento tras otro en esta base de datos. 
+\end{document}

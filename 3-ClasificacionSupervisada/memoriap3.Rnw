@@ -1,0 +1,349 @@
+\documentclass [a4paper] {article}
+
+\usepackage[utf8]{inputenc}
+
+\title{Práctica 3: Fundamentos de la Ciencia de Datos}
+\author{
+  Daniel López Moreno\\
+  \and
+  Alejandro Fernández Maceira\\
+  \and
+  Álvaro Maestre Santa
+}
+
+\begin{document}
+\maketitle
+
+\section{Análisis de clasificación}
+
+\subsection{Clasificación en árbol de una muestra}
+En este apartado vamos a realizar una clasificación en árbol de los datos de una muestra sobre calificaciones
+de alumnos utilizando para ello el algoritmo de Hunt con ganancia de información mediante la medida de impureza
+Gini.\\
+En primer lugar, debemos de tener la librería \textbf{rpart}, si no la tenemos, tendremos que proceder a 
+instalarla. También añadiremos la libreria \textbf{tree} para mostrar la clasificación de otra forma. Además, añadiremos
+la librería \textbf{rpart.plot} para visualizar el árbol de clasificación resultante.\\
+El código para instalar las librerías es el siguiente.
+
+<<>>=
+install.packages("rpart")
+install.packages("tree")
+install.packages("rpart.plot")
+library(rpart)
+library(tree)
+library(rpart.plot)
+@
+
+Los datos que se van a utilizar en la clasificación vienen dados en un fichero .txt llamado \textbf{calificaciones.txt}.
+
+<<>>=
+calificaciones<-read.table("calificaciones.txt")
+calificaciones
+@
+
+Una vez cargados los datos, antes de empezar a trabajar con ellos, lo primero que tenemos que hacer es generar una muestra, 
+esto se realiza con la función \textbf{data.frame}. 
+
+<<>>=
+muestraCalificaciones<-data.frame(calificaciones)
+@
+
+Ahora que tenemos la muestra ya podemos trabajar con los datos. Para poder clasificarlos, que es nuestro objetivo, 
+hacemos uso de la función \textbf{rpart} del paquete \textbf{rpart} instalado previamente.
+
+<<>>=
+clasificacion = rpart(Calif_Global~., data=muestraCalificaciones, method='class',
+minsplit=1)
+clasificacion
+@
+
+Mostraremos el resultado de manera visual:
+
+<<fig=TRUE>>=
+rpart.plot(clasificacion)
+@
+
+En este comando, los distintos parámetros son los siguientes.
+\begin{itemize}
+\item \textbf{Calif-Global}:Selecciona cuál será la columna sobre la que clasificar los datos.
+\item \textbf{data=muestraCalificaciones}:Selecciona la muestra sobre la que clasificar.
+\item \textbf{method=class}:El método para realizar la partición, como es un problema de clasificación, se utiliza class.
+\item \textbf{minsplit=1}:Determina el número mínimo de observaciones por rama
+\end{itemize}
+No es necesario especificar que la impureza se calcule mediante \textbf{Gini}, ya que la función \textbf{rpart utiliza Gini por defecto}.\\
+Una vez vista la clasificación con la función \textbf{rpart}, se prueba la clasificación de los mismos datos pero con la función 
+\textbf{tree}, previamente instalado. 
+
+<<>>=
+clasificacionTree = tree(Calif_Global~., data=muestraCalificaciones, split="gini",
+mincut=1, minsize=2)
+clasificacionTree
+@
+
+Mostraremos el arbol: 
+
+<<fig=TRUE>>=
+plot(clasificacionTree, main="Árbol de clasificación")
+text(clasificacionTree, splits=TRUE, all=TRUE, cex=.7)
+@
+
+En este comando, los distintos parámetros significan lo siguiente.
+\begin{itemize}
+\item \textbf{Calif-Global}:Selecciona cuál será la columna sobre la que clasificar los datos.
+\item \textbf{data=muestraCalificaciones}:Selecciona la muestra sobre la que clasificar.
+\item \textbf{split="gini"}: Selecciona Gini como método de cálculo de la impureza para clasificar.
+\item \textbf{mincut=1}:El método para realizar la partición,como es un problema de clasificación, se utiliza class.
+\item \textbf{minsize=2}:Determina el número mínimo de observaciones por rama
+\end{itemize}
+
+Como podemos observar tras realizar la clasificación utilizando ambas funciones, el resultado y el arbol mostrado es el mismo, 
+necesitando en ambos  casos las 3 columnas (Lab, Prac y Teor) para clasificar completamente la muestra. Sin embargo en los 2 casos utilizando el
+árbol de clasificación algunas veces somos capaces de averiguar la \textbf{Calif-Global} utilizando solamente la calificación 
+de \textbf{Lab} o de \textbf{Lab y Prac}.
+
+\subsection{Función de regresión}
+En este apartado vamos a realizar una función de regresión sobre una muestra de datos que contiene datos del radio de varios planetas 
+y su densidad. 
+Lo primero que hay que hacer para poder hacer la función de regresión es cargar el documento con los datos de los planetas: 
+
+<<>>=
+muestraPlanetas = read.table("planetas.txt")
+@
+
+Después, simplemente hay que llamar a la función \textbf{lm}, la cual generará los coeficientes de la recta de regresión. 
+
+<<>>=
+regresion=lm(D~R, data=muestraPlanetas)
+summary(regresion)
+@
+<<fig=TRUE>>=
+plot(muestraPlanetas$R, muestraPlanetas$D)
+abline(regresion)
+@
+
+
+Donde \textbf{D~R} indica cuál será la y(D) y la x(R) en la recta, y \textbf{data=muestra} indica los datos sobre los que hacer la regresión.
+
+\section{Analisis de archivo .txt, regresión y desarrollo por parte del grupo}
+
+\subsection{Clasificación del tipo de vehículo}
+En este apartado del ejercicio vamos a realizar la clasificación de una muestra que contiene datos sobre distintos vehículos. Para
+realizar la clasificación serán necesarios los paquetes \textbf{rpart} y \textbf{tree}, pero puesto que ya los hemos instalado en el
+ejercicio anterior, no será necesario instalarlos de nuevo.\\
+El clasificador será el la columna \textbf{TipoVehiculo}, y para clasificarlo utilizaremos las otras 3 columnas incluidas en nuestro
+archivo .txt llamadas \textbf{TipoCarnet}, \textbf{NumeroRuedas} y \textbf{NumeroPasajeros}.\\
+Lo primero que haremos será leer el archivo "vehiculos.txt" y almacenarlo en la variable vehiculos:
+
+<<>>=
+vehiculos<-read.table("vehiculos.txt")
+vehiculos
+@
+
+Ahora, convertiremos nuestra muestra en un data.frame para poder trabajar con ella de manera adecuada:
+
+<<>>=
+muestraVehiculos<- data.frame(vehiculos)
+@
+
+Una vez ya tenemos nuestra muestra de los vehiculos lista, ya podemos comenzar a clasificarlos utilizando la función
+\textbf{rpart} que ya hemos utilizado en el ejercicio anterior con las calificaciones.
+
+<<>>=
+clasificacionVehiculos = rpart(TipoVehiculo~., data=muestraVehiculos, method='class',
+minsplit=1)
+clasificacionVehiculos
+@
+
+Como ya hemos explicado en el ejercicio 1.1, el primer parámetro de entrada de la función se utiliza para determinar
+la columna sobre la que se va a hacer la clasificación y el resto de parámetros determinan la muestra sobre la que trabajar, el 
+tipo de partición y el mínimo de observaciones por rama.\\
+Una vez hemos realizado la clasificación utilizando la función \textbf{rpart} vamos a comprobar si el resultado que obtenemos utilizando
+la función \textbf{tree} es similar:
+
+<<>>=
+clasificacionVehiTree = tree(TipoVehiculo~., data=muestraVehiculos, split="gini",
+mincut=1, minsize=2)
+clasificacionVehiTree
+@
+
+Mostramos los árboles resultantes:\\
+Árbol de rpart:
+
+<<fig=TRUE>>=
+rpart.plot(clasificacionVehiculos)
+@
+
+Árbol de tree:
+
+<<fig=TRUE>>=
+plot(clasificacionVehiTree, main="Árbol de clasificación")
+text(clasificacionVehiTree, splits=TRUE, all=TRUE, cex=.7)
+@
+
+Esta vez, como se puede apreciar en los árboles mostrados, los resultados de rpart y tree son distintos.\\
+En el caso de \textbf{rpart} escoge como nodo inicial el TipoCarnet, descartando así las Bicicletas. Despues utiliza el NumeroRuedas 
+para descartar las Motos. Y por último, utiliza otra vez el NumeroRuedas para separar entre Coche y Camión.\\
+En el caso de \textbf{tree} comienza utilizando \textbf{NumeroPasajeros} para separar aquellos vehiculos
+que tienen \textbf{menos de 1.5 pasajeros} y aquellos que \textbf{más de 1.5}. En el siguiente nivel, entre los que tenían menos
+de 1.5 pasajeros, utiliza el \textbf{TipoCarnet} para separar en Bicicleta o Moto. Mientras, en el otro
+hijo utiliza de nuevo el \textbf{NumeroPasajeros} para separar aquellos con \textbf{menos de 3 pasajeros} y aquellos con
+\textbf{más de 3 pasajeros}. Entre aquellos que tienen menos de 3, utiliza el \textbf{TipoCarnet} para clasificar 
+la Moto y en el siguiente nivel vuelve a utilizar \textbf{TipoCarnet} para separar entre Bicileta y Camión.
+Por último, entre aquellos que tenían más de 3 pasajeros, utiliza el \textbf{NumeroRuedas} para separar Coche y Camión.
+
+\subsection{Análisis de regresión}
+En este apartado vamos a realizar la función de regresión de nuestra muestra de datos incluida en el enunciado, formada por 4 pares 
+de datos. Como cada uno de los pares de datos es independiente del resto, pero queremos leerlos todos del mismo archivo .txt,
+procederemos a leer la muestra y despues dividiremos el data.frame en 4 partes de igual tamaño.Esta muestra estará guardada
+en el archivo \textbf{"muestra2\_2.txt"}.\\\\
+\textbf{Nota importante}: Al generar el archivo "muestra2\_2.txt" podriamos haber generado un archivo con 44 filas(11 por muestra) y dos
+columnas X-Y y posteriormente haber dividido en 4 muestras utilizando la función 
+\textbf{"split(muestraDatos, factor(sort(rank(row.names(muestraDatos))\%\%4)))"}. Sin embargo, hemos optado por generar el archivo
+.txt como un archivo de 11 filas y 8 columnas numeradas (Un par X-Y por cada muestra) con el fin de facilitar la visibilidad y la
+comprensión, ya que tras realizar numerosas pruebas, hemos comprobado que el resultado es idéntico.\\
+Comenzaremos por leer el archivo:
+
+<<>>=
+muestraDatos <- read.table("muestra2_2.txt")
+muestraDatos
+@
+
+Una vez hemos leido los datos podemos calcular la regresión de cada una de las muestras utilizando sus respectivas columnas X-Y:\\\\
+Regresión de la Muestra 1:
+
+<<>>=
+regresion1=lm(Y1~X1, data=muestraDatos)
+summary(regresion1)
+@
+<<fig=TRUE>>=
+plot(muestraDatos$X1, muestraDatos$Y1)
+abline(regresion1)
+@
+
+Regresión de la Muestra 2:
+
+<<>>=
+regresion2=lm(Y2~X2, data=muestraDatos)
+summary(regresion2)
+@
+<<fig=TRUE>>=
+plot(muestraDatos$X2, muestraDatos$Y2)
+abline(regresion2)
+@
+
+Regresión de la Muestra 3:
+
+<<>>=
+regresion3=lm(Y3~X3, data=muestraDatos)
+summary(regresion3)
+@
+<<fig=TRUE>>=
+plot(muestraDatos$X3, muestraDatos$Y3)
+abline(regresion3)
+@
+
+Regresión de la Muestra 4:
+
+<<>>=
+regresion4=lm(Y4~X4, data=muestraDatos)
+summary(regresion4)
+@
+<<fig=TRUE>>=
+plot(muestraDatos$X4, muestraDatos$Y4)
+abline(regresion4)
+@
+
+\subsection{Desarrollo por parte del grupo}
+
+\subsubsection{Clasificación en árbol de una muestra}
+En este apartado vamos a realizar una clasificación en árbol de los datos de una muestra sobre calificaciones
+de alumnos utilizando para ello el algoritmo de Hunt con ganancia de información mediante la medida de impureza
+Gini.\\
+
+Los datos que se van a utilizar en este apartado viene dado de un fichero .csv llamado \textbf{basic\_income2.csv}.
+
+<<>>=
+data<-read.csv("basic_income2.csv")
+@
+
+Ahora procedemos a crear la muestra, para ello lo hacemos con el comando \textbf{data.frame}.
+
+<<>>=
+muestraIncome = data.frame(data)
+@
+
+Una vez creada la muestra, ya podemos proceder a clasificarla, para ello debemos de saber, sobre que columna
+queremos clasificar, para ello, hacemos un \textbf{colnames()}.
+
+<<>>=
+colnames(muestraIncome)
+@
+
+Una vez visualizadas las columnas, seleccionamos sobre cual queremos hacer la clasificación, en nuestro caso hemos 
+elegido \textbf{gender}. Quedando el siguiente resultado:
+
+<<>>=
+clasificacionIncome = rpart(gender~.,data=muestraIncome,method='class',minsplit=1)
+clasificacionIncome
+@
+
+Ahora lo visualizamos en forma de árbol, para ver de forma más clara los resultados:
+
+<<fig=TRUE>>=
+rpart.plot(clasificacionIncome)
+@
+
+Una vez visualizado el árbol de clasificación mediante \textbf{rpart}, ahora vamos a clasificarlos con \textbf{tree}, 
+quedando el siguiente resultado:
+
+<<>>=
+clasificacionTreeInc = tree(dem_education_level~.,data=muestraIncome, 
+mincut=1,minsize=2)
+clasificacionTreeInc
+@
+
+Como podemos observar, la clasificación no nos ha salido igual, siendo necesario mediante la clasificación \textbf{rpart}, dos columnas, 
+pero para la clasificación \textbf{tree}, no necesitamos ninguna.
+
+\subsubsection{Función de regresión}
+En este apartado vamos a calcular la función de regresión del archivo \textbf{appstore\_games.csv}.
+Lo primero de todo es cargar las librerías necesarias, en este caso necesitamos solamente una, que es \textbf{ggplot2}, 
+cuya función es representar los datos en una
+gráfica:
+
+<<>>=
+install.packages("ggplot2")
+library(ggplot2)
+@
+
+Posteriormente cargamos la base de datos a utilizar:
+
+<<>>=
+datosApps = read.csv("appstore_games.csv")
+@
+
+Ahora vamos a visualizar una gráfica que contendrá los datos, los cuales calcularemos la recta de regresión del archivo. 
+Quedando el siguiente resultado:
+
+<<fig=TRUE>>=
+ggplot()+geom_point(data = datosApps, aes(x = Average.User.Rating, 
+y = User.Rating.Count)) + xlab("Puntuación media usuarios") +
+ylab("Puntuaciones usuarios totales") +
+ggtitle("Representación datos")
+@
+
+Donde x es la media de valoración de usuarios(desde 0 hasta 5), y la y es el total de valoraciones que hay.
+
+Una vez visualizada la gráfica, vamos a calcular los coeficientes de la recta regresión. Quedando el siguiente resultado:
+
+<<>>=
+regresionApps=lm(User.Rating.Count~Average.User.Rating, data=datosApps)
+summary(regresionApps)
+@
+<<fig=TRUE>>=
+plot(datosApps$Average.User.Rating, datosApps$User.Rating.Count)
+abline(regresionApps)
+@
+
+
+\end{document}

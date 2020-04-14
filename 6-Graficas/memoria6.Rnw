@@ -1,0 +1,430 @@
+\documentclass [a4paper] {article}
+
+\usepackage[utf8]{inputenc}
+
+\title{Practica 6: Fundamentos de la Ciencia de Datos}
+\author{
+  Daniel López Moreno\\
+  \and
+  Alejandro Fernández Maceira\\
+  \and
+  Álvaro Maestre Santa
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Mapa Coroplético}
+
+En esta práctica se nos pide,que desarrollemos con toda la profundidad posible un tipo de 
+gráfico de visualización de datos. En nuestro caso hemos optado por un tipo de gráfico
+denominado \textbf{Mapa Coroplético}.
+
+\subsection{¿Qué es un mapa coroplético?}
+
+Un mapa coroplético es un tipo de gráfico que muestra una determinada \textbf{región geográfica dividida 
+en distintas secciones}. Sobre nuestro mapa se \textbf{mide una variable} en concreto y posteriormente
+cada una de las secciones del mapa se \textbf{colorea} con un \textbf{tono más claro o más oscuro} en función de la
+frecuencia absoluta o relativa de la variable en dicha sección.
+
+\begin{center}
+  \centering\includegraphics{mapacloropletico.png}
+  \\\textbf{Figura 1}: Ejemplo de mapa cloroplético 
+\end{center}
+
+
+Este tipo de gráfico suele estar compuesto por los siguientes elementos:
+\begin{itemize} 
+  \item \textbf{Mapa}: El elemento principal de este gráfico es el mapa situado en el centro, dividido en distintas
+  regiones.
+  \item \textbf{Leyenda}: Todos los mapas coropléticos incluyen una leyenda que nos indica los distintos rangos de 
+  la variable a medir junto a un gradiente de color de más claro a más oscuro.
+  \item \textbf{Título}: Todo mapa cloroplético debe incluir un título que nos indique que se está representando en
+  nuestro gráfico.
+\end{itemize}
+
+\subsubsection{Ventajas de un mapa coroplético}
+
+Un mapa coroplético resulta muy útil en determinadas ocasiones ya que es un tipo de gráfico muy \textbf{fácil de entender}.
+Además, es muy fácil localizar las zonas donde encontramos \textbf{máximos o mínimos} en los datos ya que suele resultar sencillo
+encontrar las secciones con un color más oscuro o más claro.
+
+\subsubsection{Desventajas de un mapa coroplético}
+
+Una de las desventajas de este tipo de gráficos es que a veces puede resultar \textbf{difícil distinguir en que rango de color}
+se encuentra una determinada sección si se encuentra en uno de los rangos intermedios de la progresión de color.
+Otra desventaja que podriamos destacar es que como los datos se dividen en rangos, es más \textbf{dificil obtener información
+exacta} a través de los colores.
+
+\subsection{Desarrollo de un mapa coroplético en R}
+
+\subsubsection{Mapa sobre votos en EEUU}
+En este ejemplo vamos a realizar un mapa coroplético sobre el \textbf{porcentaje de votos a George Bush en las elecciones de Estados
+Unidos de 2004}.
+Comenzaremos a desarrollar nuestro propio gráfico de mapa coroplético. Para ello utilizaremos
+las siguientes librerias:
+
+<<>>=
+install.packages("RColorBrewer")
+install.packages("rgdal")
+
+library(RColorBrewer)
+library(rgdal)
+@
+
+Ahora cargaremos nuestro \textbf{shapefile} en el workspace para trabajar con él:
+
+<<results=hide>>=
+USvotos <- readOGR(dsn="Shapefile", layer = "2004_Election_Counties")
+@
+
+\begin{itemize} 
+  \item \textbf{Dsn}: Con dsn especificamos el directorio en el que se encuentra nuestro shapefile, en nuestro caso pondremos
+  un punto "." ya que el archivo está en el mismo directorio de trabajo .
+  \item \textbf{Layer}: En el atributo layer especificaremos el nombre de nuestro shapefile que vamos a cargar.
+\end{itemize}
+
+A continuación elegiremos nuestra paleta de colores. Tenemos distintas paletas de colores gracias al paquete \textbf{RcolorBrewer}:
+
+\begin{center}
+<<fig=TRUE>>=
+display.brewer.all()
+@
+\\\textbf{Figura 2}: Todas las paletas de colores disponibles.
+\end{center}
+
+Para nuestro ejemplo utilizaremos la paleta de colores \textit{Reds}:
+
+<<>>=
+paleta <- brewer.pal(8, "Reds")
+@
+
+Ahora indicaremos los intervalos de nuestros votos y separaremos los datos de cada condado asignandolos según el rango de 
+porcentaje al que pertenezcan:
+
+<<results=hide>>=
+rangos <- c(0, 20, 40, 50, 60, 80, 100)
+cut(USvotos$Bush_pct, rangos)
+esquema_color <- paleta[findInterval(USvotos$Bush_pct, vec = rangos)]
+@
+
+Con la función \textbf{cut} separamos la columna correspondiente al porcentaje de votos de bush en los distintos rangos
+especificados en la variable \textbf{rangos}.
+Posteriormente en función de la paleta que hayamos escogido asignamos a la variable \textbf{esquema\_color} el mapa ya coloreado
+por condados según su pertenencia a un rango o a otro.
+
+Por último generamos el gráfico y añadimos una leyenda:
+
+\begin{center}
+<<fig=TRUE>>=
+plot(USvotos, col = esquema_color,
+main = "Porcentaje de votos para Bush - 2004", cex = 5)
+legend(-119, 31.5, legend = levels(cut(USvotos$Bush_pct, rangos)),
+fill = esquema_color, cex = 0.8, title = "% vote for Bush")
+@
+\\\textbf{Figura 3}: Mapa coroplético de votos a Bush en 2004.
+\end{center}
+
+En cuanto a la función \textbf{plot} tenemos los siguientes parámetros:
+\begin{itemize} 
+  \item \textbf{USvotos}: Datos sobre los que vamos a realizar la gráfica.
+  \item \textbf{Col}: Este atributo sirve para especificar el color de nuestro gráfico, en nuestro caso será la variable esquema\_color 
+  que hemos creado anteriormente.
+  \item \textbf{Main}: Título de nuestro gráfico.
+  \item \textbf{Cex}: Este parámetro indica la escala del texto.
+\end{itemize}
+
+En cuanto a la función \textbf{legend} tenemos los siguientes parámetros:
+\begin{itemize} 
+  \item \textbf{x}: Coordenada x de posicionamiento de nuestra leyenda, en nuestro caso \textbf{-119}.
+  \item \textbf{y}: Coordenada y de posicionamiento de nuestra leyenda, en nuestro caso \textbf{31.5}.
+  \item \textbf{legend}: Datos que vamos a introducir en nuestra leyenda, separados en rangos.
+  \item \textbf{fill}: Este parámetro se utiliza para generar cajas rellenas por distintos colores, en nuestro caso, los 
+  pertenecientes a la paleta \textit{"Reds"}.
+  \item \textbf{cex}: Este parámetro indica la escala del texto.
+  \item \textbf{title}: Título para nuestra leyenda.
+\end{itemize}
+
+\subsubsection{Mapa sobre los intercambios Erasmus en los diferentes paises de la Unión Europea}
+\textbf{Cargar Datos:}\\
+Gracias a la carta de los derechos fundamentales, que nos permite el acceso a documentos de la
+UE, entró en vigor en 2009, y es por ello que podemos elaborar este mapa.
+
+En primer lugar vamos a cargar los datos de la base de datos, como el archivo es .csv nos 
+facilitará a la hora de cargar los datos. Con la librería \textbf{"rio"}, podremos 
+importar el conjunto de datos del archivo .csv a R. En este caso, nos vamos a remontar al
+conjunto de datos del 2012-2013.
+
+<<>>=
+rm(list = ls())
+install.packages("rio")
+library(rio) 
+erasmus <- import("Erasmus.csv") 
+@
+
+Lo primero que nos tenemos que dar cuenta, es que el conjunto de datos es muy grande, ya que
+tiene 267.547 observaciones de 34 variables cada una. Por lo tanto, nos debería bastar para
+realizar un análisis correcto.\\
+
+\textbf{Limpieza de datos:}\\
+Ahora hay que ver que datos nos interesan, para realiar este análisis, para ello, tendremos que
+hacer una limpieza de datos y crear una nueva métrica. Las variables que nos interesan son 
+\textbf{los códigos de país de la institución anfitriona y de la institución de origen}.
+También tendremos que borrar aquello valores que faltan o no son válidos. Después de hacer
+todo esto, crearemos dos vectores (erasmushome y erasmushost).
+
+<<>>=
+erasmus= erasmus[!erasmus$HOST_INSTITUTION_COUNTRY_CDE == "???",]
+erasmushome=erasmus[, 4]
+erasmushost=erasmus[, 13]
+@
+
+Ahora tenemos una larga lista con los diferentes códigos de cada país. Esta información debe de
+ser agregada de alguna manera, y esto lo haremos con el comando \textbf{table()}. Por lo tanto,
+crearemos una matriz llamada \textbf{home}, la cual contendrá el código de cada país.
+
+<<>>=
+home <- as.matrix(table(erasmushome))
+home
+@
+
+Ahora tenemos un problema, y es que Bélgica se divide en varias regiones: BEFR, BENL y BEDE, 
+pero a parte, no es solo este problema, sino que varios estudiantes tienen BEDE(Bélgica de
+habla alemana) como su código de país anfitrión, ninguno lo tiene como su código de país de
+origen. Esto lo arreglamos usando la función \textbf{rbind()}, ya que podemos enlazar nuestra
+tabla con una nueva observación para Bélgica en su conjunto. También podemos cambiar el nombre 
+de la fila en cuestión (BE), ordenar la matriz alfabéticamente y eliminar las dos filas belgas
+regionales.
+
+<<>>=
+home <- rbind(home, matrix(home[2] + home[3]))
+rownames(home)[35] = "BE"
+home <- home[order(rownames(home)), ]
+home <- home[-c(3, 4)]
+@
+
+Ahora hacemos el mismo procedimiento para el anfitrión (host).
+
+<<>>=
+host <- as.matrix(table(erasmushost))
+host <- rbind(host, matrix(host[2] + host[3] + host[4]))
+rownames(host)[36] = "BE"
+host <- host[order(rownames(host)), ]
+host <- host[-c(3, 4, 5)]
+@
+
+A continuación, nos podemos fijar, como tenemos variables de la misma longitud. Por lo tanto,
+con el comando \textbf{cbind()}, podemos unirlos en un nuevo conjunto de datos de la siguiente
+manera:
+
+<<>>=
+big <- as.data.frame(cbind(home, host))
+@
+
+\textbf{Resumen:} ¿Qué tenemos ahora? tenemos un conjunto de datos con dos variables y 33
+observaciones. La variable \textbf{home} nos dice cuántos ciudadanos abandonaron el país y la variable 
+\textbf{host}, nos dice cuantos estudiantes extranjeros entraron en el país. Entonces, lo que
+queremos es hacer una métrica que pueda comparar estas dos cifras. Básicamente es responder
+la siguiente pregunta: \textbf{¿Cuántos estudiantes extranjeros se alojan por cada estudiante enviado
+al extranjero?}
+Por lo tanto, tenemos que crear una nueva variable en nuestro conjunto de datos formado:
+
+<<>>=
+big$rat <- big$host / big$home
+@
+
+Dado que queremos crear un mapa, vamos a querer que nuestros nombres de fila (países) sean idénticos
+a los nombres de fila de datos de mapa del paquete \textbf{maps}. Por lo tanto, vamos a cambiar
+nuestros códigos de país en nombres de países completos. Esto lo conseguiremos, utilizando
+el paquete \textbf{countrycode}, que se encargará de hacer todo esto. El comando \textbf{countrycode()}
+especifica los códigos de país de Eurostat y los nombres de país como origen y destino respectivamente.
+El problema, es que hay veces que falla este comando, pero se puede introducir manualmente.
+
+<<>>=
+install.packages("countrycode")
+library(countrycode)
+countries <- countrycode(rownames(big), "eurostat", "eurostat.name")
+countries[13] <- "Greece"
+countries[7] <- "Germany"
+countries[33] <- "UK"
+rownames(big) <- countries
+@
+
+Ahora, el problema es que el paquete \textbf{maps}, hace referencia a países en una columna
+distinta, no a las filas. Por lo tanto, vamos a copiar los nombres de fila en una nueva columan 
+llamada \textbf{region}. Vamos a reordenar tambíen las oclumans para que esta columna aparezca
+primero.
+
+<<>>=
+big$region <- rownames(big)
+big <- big[, c(4, 1, 2, 3)]
+big
+@
+
+\textbf{Crear el mapa:}\\
+Ahora vamos a crear el mapa, para ello, vamos a cargar el paquete \textbf{maps}, ya que
+nos proporciona coordenadas que luego podemos trazar como polígonos para crear el mapa.
+Si queremos una escala de color elegante que corresponda a nuestra métrica, vamos a tener 
+que combinar parte del conjunto de datos del paquete \textbf{maps} con nuestro propio 
+conjunto de datos. Por eso necesitamos que los nombres de los países correspondan con los 
+nombres del conjunto de datos del paquete \textbf{maps}. Otra librería que utilizaremos será
+\textbf{ggplot2}, el cual, nos dibujará el mapa. Si queremos mostrar otros países que no 
+correspondan con la UE, deberemos de rellenarlos con valores "NA". Por lo tanto, necesitaremos
+una lista de todas las regiones a partir de los datos del \textbf{mundo} de los \textbf{mapas},
+y necesitaremos también un conjunto de datos más grande con valores NA para todos los países que
+no participan en el Erasmus. Vamos a crear un conjunto de datos con nuestros datos de mapa 
+\textbf{mundo}.
+
+<<>>=
+install.packages("maps")
+install.packages("ggmap")
+library(maps)
+library(ggmap)
+mundo <- map_data("world")
+@
+
+A continuación, vamos a crear un marco de datos con valores "NA" para empezar, que más adelante
+podemos reemplazar con nuestros valores para la métrica. Por lo tanto, queremos que tenga el 
+mismo número de filas que el número de regiones del conjunto de datos \textbf{mundo}. Hay que
+recordar, que nuestro objetivo es mantener nuestros valores para los países Erasmus, pero
+también queremos valores "NA" para otras regiones en el conjunto de datos \textbf{mundo}, de
+lo contrario estos países tendrán el mismo color que el fondo en nuestro mapa. También vamos
+a crear una nueva columna con todos los nombres de región. Esto hace posible la fusión en la variable
+\textbf{region}.
+
+<<>>=
+tojoin <- as.data.frame(matrix(
+          nrow = length(table(mundo$region)),
+          ncol = 4,
+          NA,
+          dimnames = list(names(table(mundo$region)), colnames(big))
+  ))
+tojoin$region <- rownames(tojoin)
+@
+
+Ahora, vamos a unir a nuestros datos Erasmus con estos nombres de región y posteriormente, lo
+ordenaremos el conjunto de datos resultante. \textbf{fulljoin()} nos vendrá muy bien para empezar,
+ya que mantendrá todas las filas de ambas variables pero se fusionará en aquellas columnas,
+que sean idénticas.
+
+<<>>=
+install.packages("dplyr")
+library(dplyr)
+all <- full_join(big, tojoin)
+all <- all[order(all$region), ]
+all
+@
+
+Como podemos observar hay un problema, y es que R creó duplicados de todas nuestras filas de los
+países Erasmus. Por lo tanto, creamos un bucle para ir recorriendo todos los datos, y así 
+solventar este problema.
+
+<<>>=
+for (i in (1:251)) {
+  if (all$region[i] == all$region[i + 1]) {
+    all <- all[-c(i + 1), ]
+  }
+}
+all
+@
+
+Ahora podemos ver, como ya no tenemos duplicados.
+
+El último paso antes de que procedamos a combinar nuestros datos con el mapa, tenemos que
+crear una relación.
+
+<<>>=
+all$rat <- all$host / all$home
+@
+
+Finalmente, ya podemos unir nuestro mapa con los datos geográficos, es decir, las coordenadas que 
+almacenamos en el conjunto de datos \textbf{mundo}. Para ello tenemos que utilizar la función
+\textbf{innerjoin()}, quedando de los siguientes datos:
+
+<<>>=
+mapaFinal <- inner_join(mundo, all, by = "region")
+head(mapaFinal)
+@
+
+Como podemos observar, hemos creado una larga lista de coordenadas.
+
+Ahora, ya podemos dibujar el mapa, esto lo haremos con la función \textbf{ggplot()} del
+paquete \textbf{ggplot2}. Con los parámetros dentro de la función \textbf{theme()}, hacen
+que el color de fondo sea cian, y se asegura de que el mapa no tiene ejes, cuadrículas o títulos.
+
+\begin{center}
+<<fig=TRUE>>=
+install.packages("ggplot2")
+library(ggplot2)
+mapaMundo <- ggplot() + theme(
+  panel.background = element_rect(fill = "lightcyan1",
+                                  color = NA),
+  panel.grid = element_blank(),
+  axis.text.x = element_blank(),
+  axis.text.y = element_blank(),
+  axis.ticks = element_blank(),
+  axis.title.x = element_blank(),
+  axis.title.y = element_blank()
+)
+mapaMundo
+@
+\\\textbf{Figura 4:} mapa vacio.
+\end{center}
+
+Como podemos observar el mapa está completamente cian, esto es debido a que no hemos 
+especificado los países o bordes, por lo que el único color es el fondo, que es cian.
+Ahora podemos proceder a especificar las nuevas coordenadas para nuestro mapa del mundo 
+utilizando la función \textbf{coord\_fixed()}.
+
+<<>>=
+europa <- mapaMundo + coord_fixed(xlim = c(-9, 42.5),
+                                 ylim = c(36, 70.1),
+                                 ratio = 1.5)
+@
+
+Como aludí antes, vamos a trazar el contorno y a colorearlo con los colores correspondientes.
+Hay que tener en cuenta que nuestros datos provienen del conjunto de datos \textbf{mundo}, cuyos
+parámetros estéticos serán, \textbf{rat} para \textbf{fill}, \textbf{long} será la \textbf{x},
+\textbf{lat} será \textbf{y} y el \textbf{group} sera el \textbf{group}. Esto último es muy
+importante, ya que especifica las coordenadas que deben unirse para formar un polígono. El 
+\textbf{color}, especifica el color para nuestros bordes. Por último utilzamos el paquete 
+\textbf{viridis} para rellenar con una guía de barra de colores en el lado derecho.
+
+\begin{center}
+<<fig=TRUE>>=
+install.packages("viridis")
+library(viridis)
+europa2 <- europa + geom_polygon(data = mapaFinal,
+                                 aes(fill = rat,
+                                     x = long,
+                                     y = lat,
+                                     group = group),
+                                 color = "grey70") +
+ labs(title = "Intercambios Erasmus, 2012-2013",
+      subtitle = "¿Cuantos estudiantes extranjeros se alojan por cada estudiante enviado al extranjero?",
+      caption = "Datos: EU Open Data Portal")  +
+ theme(text = element_text(size = 30),
+        plot.title = element_text(face = "bold")) +         scale_fill_viridis(option = "plasma",
+                   direction = -1,
+                   name = "",
+                   na.value = "grey80",
+                   guide = guide_colorbar(
+                   barheight = unit(140, units = "mm"),
+                   barwidth = unit(6, units = "mm")
+                                      )
+                                    )
+europa2
+@
+\\\textbf{Figura 5:} mapa final Europa Erasmus.
+\end{center}
+
+\textbf{Conclusión:} podemos observar como nos muestra un precioso mapa, en el que podemos
+observar claramente cómo los países del norte y noroeste de Europa (Escandinavia, Finlandia,
+Estonia y las Islas Británicas) tuvieron un balance significativamente positivo en términos
+de intercambios Erasmus en 2012-2013. Lo más sorprendete es que Chipre y Portugal también muestran
+un fuerte equilibrio positivo. La movilidad general de los estudiantes es desproporcionadamente
+hacia el norte y hacia el oeste de Europa.
+
+
+\end{document}

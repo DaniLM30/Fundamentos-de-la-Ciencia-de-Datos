@@ -1,0 +1,431 @@
+\documentclass [a4paper] {article}
+
+\usepackage[utf8]{inputenc}
+
+\title{Practica 1: Fundamentos de la Ciencia de Datos}
+\author{
+  Daniel Lopez Moreno\\
+  \and
+  Alejandro Fernandez Maceira\\
+  \and
+  Alvaro Maestre Santa
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Análisis de datos con R}
+En esta parte de la practica se nos pide que 
+apliquemos los conceptos aprendidos en el tema.\\
+
+\subsection{Analisis de un archivo .txt}
+\subsubsection{Comandos basicos}
+Primero comenzaremos con los comandos basicos para 
+comenzar a utilizar R.
+
+\begin{itemize}
+\item \textbf{help()}: Muestra la pagina de ayuda de R.
+\item \textbf{help("comando()")}: Muestra la ayuda relativa al comando que se 
+								  pasa como argumento
+\item \textbf{help.start()}: Abre la pagina de documentación online de R
+\item \textbf{setwd("directorio")}: Cambia el directorio de trabajo al 
+									directorio seleccionado
+\item \textbf{list.files()}: Muestra una lista de los archivos del directorio
+							 actual de trabajo. Otra función equivalente sería 
+							 \textbf{dir()}
+							 
+\end{itemize}
+
+A continuación mostraremos algunos comandos basicos para asignar valor
+a las variables que creemos:
+
+\begin{itemize}
+\item \textbf{x<-2}: De esta forma asignamos un valor numérico a la variables
+					 x. También podríamos utilizar = como sustituto de <-.
+\item \textbf{num<-c(2.3,4,5.6)}: Utilizamos la función c para generar vectores de
+								  valores y asignárselos a num. Estos vectores pueden
+								  ser cuantitativos (c(2.3,4,5.6)), cualitativos(c("verde","azul","rojo"))
+								  y lógicos (c(TRUE,FALSE,TRUE) o c(T,F,T))
+\item \textbf{mat1<-matrix(nrow=2,ncol=2,c(69.7,71.3,168,178))}: Utilizando el comando
+							matrix() podemos crear una matriz de dimensiones nrowXncol y 
+							llenarla con los datos del vector c. Si usamos el modificador
+							byrow=T, la matriz se llenará por filas y no por columnas.
+\end{itemize}
+
+\subsubsection{Tratamiento de un archivo .txt}
+Una vez hemos aprendido algunos comando basicos de R vamos a leer un archivo de datos
+llamado \textit{"satelites.txt"}, que contiene información sobre los satelites menores 
+de Urano, y vamos a operar con su información.\\\\
+
+El archivo \textit{"satelites.txt"} tendrá la siguiente estructura:\\
+
+\begingroup
+\setlength{\parindent}{20ex}
+\obeylines
+\input{"satelites.txt"}%
+\par
+\endgroup%
+
+Para leer el archivo y asignarlo a una variable \textbf{sat} ejecutaremos la siguiente
+función:
+
+<<>>=
+sat<-read.table("satelites.txt")
+@
+\subsubsection{Cálculo de frecuencias, media, desviación típica y varianza}
+
+Una vez hemos cargado el archivo ya podemos operar con su información.\\
+\paragraph{Longitud}. Para empezar vamos a calcular la longitud de la columna \textit{Radio} de la matriz generada, 
+utilizaremos la
+función \textbf{length()} sobre la columna Radio:
+
+<<>>=
+length(sat$Radio)
+@
+\paragraph{Media aritmetica}. Ahora vamos a calcular la media aritmética de los radios, para ello utilizaremos la
+función \textbf{mean()} sobre la columna Radio y asignaremos el valor a la variable
+\textbf{mr}:
+
+<<>>=
+mr<-mean(sat$Radio)
+mr
+@
+\paragraph{Frecuencia absoluta}. Utilizando la función \textbf{table()} calcularemos las frecuencias absolutas de una 
+columna. Haremos la prueba calculando las frecuencias de los radios:
+
+<<>>=
+frecabsradio<-table(sat$Radio)
+frecabsradio
+@
+\paragraph{Frecuencia acumulada}. También podemos calcular la frecuencia acumulada de la columna Radio. Para ello
+utilizaremos la función \textbf{cumsum()}:
+
+<<>>=
+frecabsacumradio<-cumsum(table(sat$Radio))
+frecabsacumradio
+@
+\paragraph{Frecuencia relativa}. En R no existe una función específica que nos ayude a calcular la frecuencia relativa,
+pero sí existe la opción de crear nuestras propias funciones. Por lo tanto, crearemos
+nuestra propia función para calcular la frecuencia relativa dividiendo la \textbf{frecabsradio} entre
+\textbf{length()} de la columna Radio:
+
+<<>>=
+frecrel<-function(Radio){table(Radio)/length(Radio)}
+frecrel(sat$Radio)
+@
+Una vez hemos creado nuestra función, podemos guardarla en un archivo .R utilizando la
+función \textbf{dump()}, indicando el nombre del archivo destino:
+
+<<>>=
+dump("frecrel",file="FrecRelativa.R")
+@
+También podemos cargar funciones que hayamos generado anteriormnete utilizando 
+\textbf{source()} y el nombre del archivo .R:
+
+<<>>=
+source("FrecRelativa.R")
+@
+\paragraph{Frecuencia Rel. Acumulada}. Ahora que ya sabemos como crear nuestras propias funciones, vamos a hacer los mismo
+para calcular la frecuencia relativa acumulada, creando la función \textbf{frecrelacum()}:
+
+<<>>=
+frecrelacum <-function(Radio){cumsum(table(Radio))/length(Radio)}
+dump("frecrelacum",file="FrecRelativaAcum.R")
+source("FrecRelativaAcum.R")
+frecrelacum(sat$Radio)
+@
+\paragraph{Desviación típica y varianza}. La siguiente magnitud que vamos a calcular será la \textbf{desviacion tipica} y 
+la \textbf{varianza}.\\
+La desviación típica y la varianza se pueden calcular utilizando las funciones \textbf{sd()}
+y \textbf{var()}, pero se calculan con un denominador N-1, por lo que para lograr los mismos
+resultados que hemos obtenido a mano, crearemos nuestras propias funciones que cambien ese denominador
+N-1 por un denominador N:
+
+<<>>=
+desvtipica <-function(Radio){sqrt(sd(Radio)*sd(Radio)*(length(Radio)-1)/length(Radio))}
+varian<- function(Radio){var(Radio)*(length(Radio)-1)/length(Radio)}
+dump("desvtipica",file="DesviacionTipica.R")
+dump("varian",file="Varianza.R")
+source("DesviacionTipica.R")
+source("Varianza.R")
+desviaciontipica<-desvtipica(sat$Radio)
+desviaciontipica
+varianza<-varian(sat$Radio)
+varianza
+@
+\subsubsection{Cálculo de medidas de ordenación, mediana y cuartiles}
+
+En este apartado vamos a proceder a calcular las \textbf{medidas de ordenacion} sobre nuestra
+columna Radio.\\
+\paragraph{Ordenación}. Lo primero que vamos a ver es como ordenar nuestra columna de manera \textbf{ascendente}
+utilizando el comando \textbf{order()}:
+
+<<>>=
+so= sat[order(sat$Radio), ]
+so
+@
+Si por el contrario queremos ordenarlo de manera \textbf{descendente} simplemente debemos
+invertir la ordenación con \textbf{rev()}:
+
+<<>>=
+so= sat[rev(order(sat$Radio)), ]
+so
+@
+\paragraph{Mediana}. Lo siguiente que vamos a calcular es la \textbf{mediana}. Para ello es suficiente con 
+ejecutar la función \textbf{median()} sobre nuestra columna:
+
+<<>>=
+mediant<-median(sat$Radio)
+mediant
+@
+\paragraph{Cuantiles}. Por último vamos a calcular los cuantiles. Para calcular cualquier cuantil entre 0 y 100
+debemos utilizar la función \textbf{quantile()} indicando el vector sobre el que lo queremos 
+calcular y el cuantil exacto que deseamos obtener.\\
+Por ejemplo, para calcular el cuantil 54 debemos ejecutar lo siguiente:
+
+<<>>=
+cuant54<-quantile(sat$Radio,0.54)
+cuant54
+@
+Como se puede imaginar, si se quiere calcular cualquiera de los \textbf{4 cuartiles}, basta con calcular
+los \textbf{cuantiles 25, 50, 75 y 100}. Así como si queremos calcular la \textbf{mediana} también lo podemos
+hacer calculando el \textbf{segundo cuartil}, equivalente al \textbf{cuantil 50}.
+
+
+<<>>=
+cuartil1<-quantile(sat$Radio,0.25)
+cuartil1
+cuartil2<-quantile(sat$Radio,0.50)
+cuartil2
+mediant
+cuartil3<-quantile(sat$Radio,0.75)
+cuartil3
+cuartil4<-quantile(sat$Radio,1)
+cuartil4
+@
+
+\subsection{Pruebas sobre archivo .sav (SPSS)}
+En este apartado vamos a ejecutar las mismas funciones que ya hemos explicado, pero esta vez
+será sobre un archivo de SPPS llamado \textbf{"cardata.sav"}. Este archivo contiene datos
+de automóviles como su consumo, cilindrada, aceleración, etc.\\
+
+\subsubsection{Añadir paquetes y leer archivos SPSS}
+Para leer un archivo .txt era suficiente con ejecutar el comando \textbf{read.table()}, sin 
+embargo, para los archivos SPSS esta función no funcionará. Por ello, para poder leer un archivo
+.sav debemos importar primero una librería que nos permita hacerlo, la librería \textbf{"foreign"}.
+En este caso la librería se encuentra dentro de los archivos de R, por lo que lo único que hay que 
+hacer es instalarla:
+
+<<>>=
+library(foreign)
+@
+Una vez instalada, podemos comprobar que se ha añadido utilizando la función \textbf{search()}:
+
+<<>>=
+search()
+@
+Una vez estamos listos para leer el archivo, lo cargaremos en la variable \textbf{coches} utilizando
+la función \textbf{read.spss()}:
+
+<<>>=
+coches<-read.spss("cardata.sav")
+@
+
+\subsubsection{Cálculo de media, desviación típica y varianza}
+Una vez tenemos cargado el archivo, vamos a operar con la columna referente al \textbf{consumo(mpg)}.
+Para simplificar la tarea guardaremos la columna en la variable \textbf{mpg}.\\
+Para empezar, vamos a calcular la media aritmetica:
+
+<<>>=
+mpg<-coches$mpg
+med<-mean(mpg)
+med
+@
+Como se puede comprobar, el resultado de la \textbf{media es NA}. Esto se debe a que algunos datos de 
+la columna "mpg" tienen como valor NA y no puede sumarlos, por lo que debemos ignorar estos datos
+a la hora de calcular la media:
+
+<<>>=
+mpg<-mpg[!is.na(mpg)]
+med<-mean(mpg)
+med
+@
+Lo siguiente que vamos a calcular sobre esta columna son la \textbf{desviacion típica} y
+la \textbf{varianza} utilizando las funciones que hemos creado en el apartado anterior:
+ 
+<<>>=
+desviacioncoches<-desvtipica(mpg)
+varianzacoches<-varian(mpg)
+desviacioncoches
+varianzacoches
+@
+
+\subsubsection{Cálculo de medidas de ordenación, mediana y cuartiles}
+Por último, vamos a calcular las medidas de ordenación (mediana y cuartiles) sobre la columna
+mpg.\\
+El cálculo sería similar al realizado anteriormente sobre los satélites:\\\\
+Mediana:
+
+<<>>=
+mediantmpg<-median(mpg)
+mediantmpg
+@
+Cuartiles:
+
+<<>>=
+cuartil1mpg<-quantile(mpg,0.25)
+cuartil1mpg
+cuartil2mpg<-quantile(mpg,0.50)
+cuartil2mpg
+mediantmpg
+cuartil3mpg<-quantile(mpg,0.75)
+cuartil3mpg
+cuartil4mpg<-quantile(mpg,1)
+cuartil4mpg
+@
+
+\section{Análisis estadístico de proyectos en Kickstarter con R}
+En esta sección se muestra el proceso seguido a la hora de obtener estadísticas sobre los 
+datos de una base de datos de Kaggle, en este caso de proyectos en la plataforma Kickstarter.\\
+
+\subsection{Instalación de paquetes utilizados}
+Primero comenzaremos con la instalación de los paquetes que se han utilizado en este apartado. 
+Estos paquetes son \textbf{descr} para la frecuencia, \textbf{modeest} para la moda y \textbf{FSA}
+para la media geométrica.\\
+Para instalarlos, se siguen los siguientes pasos:\\ 
+\textbf{Paquete descr:}
+<<results=hide>>=
+install.packages("descr")
+library(descr)
+@ 
+\textbf{Paquete modeest:}
+
+<<results=hide>>=
+install.packages("BiocManager")
+library("BiocManager")
+BiocManager::install("genefilter")
+install.packages("modeest")
+library(modeest)
+@
+\textbf{Paquete FSA}:
+
+<<results=hide>>=
+install.packages("FSA")
+library(FSA)
+@
+El paquete modeest, como se puede observar, requiere de la función \textbf{genefilter} del paquete
+\textbf{BiocManager}. Después de tener instalados los paquetes, se puede proceder al análisis estadístico
+de los datos.\\
+
+\subsection{Preparación del entorno}
+Lo primero que hacemos es preparar el entorno de trabajo. Para ello, se lee el archivo de datos, el 
+cual viene dado en formato .csv. Para leer este tipo de archivo, se hace uso de la instrucción del 
+paquete estándar de R \textbf{read.csv}. Antes de esto, a modo opcional, se puede comprobar si el archivo
+a leer está en el directorio actual con la instrucción \textbf{dir()}.
+
+<<echo=FALSE, results=hide>>=
+dir()
+ksp = read.csv("ksprojects.csv")
+@
+Después de esto, ya podemos trabajar con el fichero en cuestión. Ahora utilizamos la función \textbf{colnames}
+para obtener el nombre de las filas cargadas y poder aplicar las funciones estadísticas. 
+<<>>=
+colnames(ksp)
+@
+Una vez elegidas las columnas a tratar, podemos crear un atajo para no tener que llamar a esa columna por su nombre completo
+dentro del fichero. Esto se puede lograr con la siguiente instrucción, en este caso aplicada a la columna \textbf{goal}, 
+aunque el proceso es el mismo para cualquier otra columna.
+<<>>=
+goals = ksp$goal 
+@
+Por último, se utilizarán las funciones de varianza y desviación típica del anterior ejercicio de la práctica, previamente importadas.\\
+
+\subsection{Análisis de datos}
+En esta sección se analizarán los datos elegidos mediante técnicas estadísticas. El primer bloque de datos 
+a analizar pertenece a los objetivos de apoyo monetario de los proyectos de Kickstarter. \\
+\subsubsection{Calculo de media, desviacion tipica y varianza}
+\textbf{Media aritmética}:
+
+<<>>=
+mean(goals)
+@
+\textbf{Media geométrica}, para la cual utilaremos el paquete FSA:
+
+<<>>=
+geomean(goals)
+@
+\textbf{Desviacion tipica}:
+
+<<>>=
+desvGoals<-desvtipica(goals)
+desvGoals
+@
+\textbf{Varianza}:
+
+<<>>=
+varianGoals<-varian(goals)
+varianGoals
+@
+\textbf{Moda}, utilizando el paquete \textbf{modeest}:
+
+<<>>=
+mlv(goals, method = "mfv")
+@
+En el método el valor es mfv porque es el valor más frecuente (most frequent value).\\\\
+\textbf{Mínimo absoluto}:
+
+<<>>=
+min(goals)
+@
+\textbf{Máximo absoluto}:
+
+<<>>=
+max(goals)
+@
+\textbf{Rango}:
+
+<<>>=
+range(goals)
+@
+Las frecuencias las vamos a mostrar sobre las 10 primeras filas de datos, ya que si mostrasemos
+todos los datos el documento quedaría demasiado extenso.\\
+\textbf{Frecuencia absoluta y relativa}:
+\begin{center}
+
+<<fig=TRUE>>=
+frecuencias<-freq(goals)[1:10,]
+frecuencias
+
+@
+\end{center}
+\textbf{Frecuencia absoluta acumulada}:
+
+<<>>=
+cumsum(table(goals))[1:10]
+@
+\textbf{Frecuencia relativa acumulada}:
+
+<<>>=
+frecrel(goals)[1:10]
+@
+
+\subsubsection{Cálculo de medidas de ordenación, mediana y cuartiles}
+\textbf{Mediana} (equivalente al segundo cuartil):
+<<>>=
+median(goals)
+@
+\textbf{Primer y tercer cuartil:}
+<<>>=
+cuartil1<-median (goals [which (goals <= median (goals))])	
+cuartil1
+cuartil3<-median (goals [which (goals >= median (goals))])	
+cuartil3
+@
+A la vista de estas estadísticas, se puede llegar a la conclusión de que los datos están muy dispersos entre sí,
+ya que la desviación típica es muy grande. Por lo tanto, la media no da un valor significativo de la población.\\
+Estas mismas estadísticas se pueden aplicar a otras columnas, como la de \textbf{backers} o la de \textbf{pledged}.
+En otras columnas como \textbf{category} o \textbf{country}, no se pueden aplicar todas las medidas, ya que los datos no son numéricos,
+pero se podrían aplicar las funciones de moda o frecuencia absoluta y relativa.
+
+\end{document}

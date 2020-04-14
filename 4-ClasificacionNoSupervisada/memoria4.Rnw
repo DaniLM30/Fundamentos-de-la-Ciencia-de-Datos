@@ -1,0 +1,316 @@
+\documentclass [a4paper] {article}
+
+\usepackage[utf8]{inputenc}
+
+\title{Practica 4: Fundamentos de la Ciencia de Datos}
+\author{
+  Daniel Lopez Moreno\\
+  \and
+  Alejandro Fernandez Maceira\\
+  \and
+  Alvaro Maestre Santa
+}
+
+\begin{document}
+
+\maketitle
+
+\section{Clasificación no supervisada}
+En este apartado vamos a realizar una clasificación no supervisada con unos datos proporcionados
+por el profesor. Para ello usaremos el algoritmo K-means, sobre la muestra utilizada en clase, a 
+parte se deberá obtener \textbf{los centroides de los clusters obtenidos}.\\
+En primer lugar, debemos tener la librería \textbf{stats}, si no la tenemos, tenemos que instalarla.\\
+
+Ahora procedemos a cargar los datos en una matriz para posteriormente hacer la transpuesta y hacer el
+algoritmo \textbf{K-means}, como ya he mencionado antes, los datos que cargamos en la matriz, están proporcionados
+por el profesor:
+
+<<>>=
+(m<-matrix(c(4,4,3,5,1,2,5,5,0,1,2,2,4,5,2,1),2,8))
+@
+
+Ahora calculamos la transpuesta de la matriz:
+
+<<>>=
+(m<-t(m))
+@
+
+A continuación, cargamos otra matriz de datos, y posteriormente haremos la transpuesta:
+
+<<>>=
+(c<-matrix(c(0,1,2,2),2,2))
+@
+
+Como ya hemos mencionado, ahora procedemos a calcular la transpuesta de la matriz cargada posteriormente:
+
+<<>>=
+(c<-t(c))
+@
+
+Ahora procedemos a realizar el algoritmo \textbf{K-means} para la clasificación, en este comando, tenemos que meter
+las dos transpuestas calculadas previamente y posteriormente ponemos el número de iteraciones que queremos
+que haga \textbf{K-means}, en este caso 4, cuando llegue a la 4 iteración parará.
+El resultado obtenido es el siguiente:
+
+<<>>=
+(clasificaciones<-kmeans(m,c,4))
+@
+
+Ahora vamos a proceder a explicar los resultados obtenidos:
+\begin{itemize}
+	\item \textbf{En primer lugar}: tenemos dos clusters de 4 y 4 datos cada uno para un total de 8 registros.
+	\item \textbf{cluster means}: en este apartado, el algoritmo calcula la medida más óptima para hallar
+	los centroides, los cuales, muestra en \textbf{Cluster Means}, cuando detecta estos, en este caso,
+	detecta 2 centroides. 
+	\item \textbf{Clustering vector}: indica el pronóstico para cada registro testeado con el algoritmo.
+	\item \textbf{[1] 3.75 2.75}: estos valores, es la inercia intra-clúster de cada grupo.
+	\item \textbf{between\_SS / total\_SS}: es una medida de calidad e indica que tanto están separados los
+	grupos de manera inter-cluster en relación al agrupamiento intra-cluster, mientras, se esté más cercano
+	al 100%, mayor será la calidad del modelo.
+	\item \textbf{Available components}: tenemos los elementos disponibles del modelo, los cuales, vamos a explicar a continuación:
+	\begin{itemize}
+		\item \textbf{Cluster}: La categorización asignada a cada observación de los datos introducidos o dataset
+		en función a su cercanía a estos centros.
+		\item \textbf{Centers}: Los centroides.
+		\item \textbf{Totss}: Inercia total del conjunto de datos.
+		\item \textbf{Withinss}: Inercia intra-clases de cada uno de los grupos.
+		\item \textbf{Tot.withinss}: Inercia intra-clases total.
+		\item \textbf{Betweenss}: Inercia inter-clases.
+		\item \textbf{Size}: El tamaño de cada grupo.
+		\item \textbf{Iter}: Número de iteraciones empleado.
+	\end{itemize}
+\end{itemize}
+
+Ahora unimos, con la función \textbf{cbind}, a la matriz de datos(clasifiaciones), en este caso, une el vector
+con la matriz m:
+
+<<>>=
+(m = cbind(clasificaciones$cluster,m))
+@
+
+Ahora con la funcion \textbf{subset}, cogemos de la columna 1, aquellos valores que sean igual a 1, y creamos 
+una matriz con las filas cuyo valor de la columna 1 es 1:
+
+<<>>=
+(mc1 = subset(m,m[,1] == 1))
+@
+
+Hacemos lo mismo con la columna 1, pero que contengan el valor 2:
+
+<<>>=
+(mc2 = subset(m,m[,1] == 2))
+@
+
+Quitamos la primera columna de las dos matrices generadas anteriormente, quedando los siguientes resultados:
+
+<<>>=
+(mc1 = mc1[,-1])
+(mc2 = mc2[,-1])
+@
+
+Estas dos matrices, son las matrices de los centroides resultantes.
+
+\section{Desarrollo por parte del grupo}
+
+En este apartado vamos a realizar una \textbf{Clasificación no supervisada} sobre una base de datos que reune información
+de los personajes de la saga de películas \textbf{Star Wars}.
+Este archivo \textbf{"characters.csv"} está compuesto 87 personajes con atributos repartidos en 10 columnas:
+\begin{itemize}
+	\item \textbf{Name}: (Nombre)
+	\item \textbf{Height}: (Altura) 
+	\item \textbf{Mass}: (Peso)
+	\item \textbf{Hair\_color}: (Color de Pelo)
+	\item \textbf{Skin\_color}: (Color de Piel)
+	\item \textbf{Eye\_color}: (Color de Ojos)
+	\item \textbf{Birth\_year}: (Año de nacimiento)
+	\item \textbf{Gender}: (Genero)
+	\item \textbf{Homeworld}: (Hogar)
+	\item \textbf{Species}: (Especie)
+\end{itemize}
+
+Nuestro análisis de clasificación se centrará en \textit{clusterizar} los personajes según su \textbf{altura y peso}.
+Para empezar leeremos nuestro archivo .csv y lo almacenaremos en nuestra variable \textbf{personajes}:
+
+<<>>=
+personajes<- read.csv("characters.csv")
+@
+
+Algunos de nuestros personajes no tienen la suficiente información sobre su altura o peso como para clasificarlos, y en
+estos atributos cuentan con el valor \textbf{NA}. Como no tenemos información sobre estos personajes, no podemos clasificarlos,
+asi que debemos eliminarlos de nuestra matriz utilizando la funcion \textbf{complete.cases} y especificando que queremos trabajar
+sobre las columnas de altura y peso (columnas 2 y 3), el resto no nos importa que tengan NA:
+
+<<>>=
+(personajes <- personajes[complete.cases(personajes[, 2:3]),])
+@
+
+Ahora que ya tenemos nuestra matriz con los datos es hora de trabajar con ella. Crearemos una matriz a parte para aislar las 
+medidas de altura y peso:
+
+<<>>=
+height<-personajes$height
+mass<-personajes$mass
+(medidas<-cbind(height,mass))
+@
+
+\subsection{Clasificacion con k-means}
+
+Crearemos los centroides de nuestros clusters. Para diferenciarnos del ejercicio realizado en clase realizaremos la clasificación
+k-means separando en 3 clusters en vez de en 2. Los clusters empezarán siendo \textbf{C1(200cm, 100kg)}, \textbf{C2(150cm, 75kg)} y
+ \textbf{C3(100cm, 50kg)}:
+
+<<>>=
+centroides <-matrix(c(200,100,150,75,100,50),2,3)
+(centroides <- t(centroides))
+@
+
+Una vez creados los centroides y aisladas nuestras medidas vamos a realizar la clasificación del mismo modo que la hemos realizado 
+en clase, y posteriormente \textbf{utilizaremos otros métodos de clasificación para comparar} los resultados:
+
+<<>>=
+(clasiKmeans<-kmeans(medidas,centroides,6))
+@
+
+Hemos observado que los centroides se han desplazado hacia los valores \textbf{C1(215.22222, 15.00000)}, \textbf{C2(179.02326, 24.34884)}
+y \textbf{C3(90.28571 12.42857)}.
+Después de clasificar mediante k-means, añadimos la columna de los clusters a la matriz de personajes y los separamos segun su cluster:
+
+<<>>=
+personajesKmeans = cbind(clasiKmeans$cluster,personajes)
+@
+
+\textbf{Cluster 1:}
+
+<<>>=
+(persc1 = subset(personajesKmeans,personajesKmeans[,1] == 1))
+@
+
+\textbf{Cluster 2:}
+
+<<>>=
+(persc2 = subset(personajesKmeans,personajesKmeans[,1] == 2))
+@
+
+\textbf{Cluster 3:}
+
+<<>>=
+(persc3 = subset(personajesKmeans,personajesKmeans[,1] == 3))
+@
+
+Para poder ver con más detalle la división en clusters de los datos, se representarán gráficamente los clusters en 
+dos gráficas distintas. Para ello harán falta las siguientes librerías.
+
+<<>>=
+install.packages("cluster")
+install.packages("factoextra")
+library(cluster)
+library(factoextra)
+@
+
+Ahora que están instalados los paquetes, se pueden representar los resultados anteriores.
+
+<<fig=TRUE>>=
+fviz_cluster(clasiKmeans,data=medidas)
+@
+<<fig=TRUE>>=
+clusplot(personajesKmeans,clasiKmeans$cluster,color=TRUE,shade=TRUE,labels=2,lines=0)
+@
+
+Una comprobación que se puede realizar para los datos es obtener el número óptimo de clusters para clasificarlos.
+Para comprobarlo, se utilizan la medida de la silueta, que indica de forma aproximada cómo de bien se han clasificado
+los datos, es decir, si están en los clusters correctos. 
+
+<<fig=TRUE>>=
+fviz_nbclust(medidas,kmeans,method="silhouette")
+@
+
+Como se puede observar, los mejores números de clusters para clasificar los datos están entre 2 y 3, con 1 cluster 
+la clasificación es muy ineficiente y más clusters de 3 son innecesarios.
+
+Como conclusión de esta clasificación de k-means podemos sacar que todos aquellos que quedan en el Cluster 1 comparten que su género
+es \textbf{masculino}. Los personajes pertenecientes al Cluster 3 también comparten que son de \textbf{género masculino}, a excepción de R2-D2
+y R5-D4 que son droides de pequeña estatura. Sobre el Cluster 3 también cabe destacar que ninguno de los personajes es de Especie \textbf{humano}.
+Por último, en el Cluster 2 es donde se acumulan la mayor cantidad de personajes y donde es más dificil es diferenciarlos por atributos, aunque
+si se puede observar que \textbf{todos los humanos} (a excepción de Darth Vader) se encuentran en este cluster, rondando los 179cm y 24kg.
+
+\subsection{Clasificación mediante Clustering Jerarquico Aglomerativo}
+
+A continuación realizaremos la clasificación mediante \textbf{Clustering Jerarquico Aglomerativo} en inglés HAC. Mediante este método todos los
+personajes irán agrupandose en clusters de pequeño tamaño y poco a poco irán generando clusters mayores hasta lograr un solo cluster que agrupamiento
+todos los personajes.
+Como hemos aprendido en clase, el primer paso de este algoritmo es calcular la matriz de distancias entre todos los personajes. Para ello
+utilizaremos la función \textbf{dist} y el parámetro \textbf{"euclidean"} para calcular las distancias mediante la formula euclidiana:
+
+<<>>=
+distancias <- dist(medidas, method = "euclidean")
+@
+
+Una vez hemos calculado las distancias vamos a realizar la clasificación jerarquica. Existen tres métodos diferentes de agrupar en clusters:
+\textbf{MIN("single")}, \textbf{MAX("complete")} y \textbf{Group Average("average")}.
+
+\subsubsection{Enlace simple MIN}
+
+Realizaremos la clasificación utilizando la distancia \textbf{mínima} entre puntos a cada cluster:
+
+<<fig=TRUE>>=
+hcmin <- hclust(distancias, method = "single" )
+plot(hcmin, cex = 0.6, hang = -1, main = "Dendrograma MIN")
+@
+
+
+\subsubsection{Enlace completo MAX}
+
+Realizaremos la clasificación utilizando la distancia \textbf{máxima} entre puntos a cada cluster:
+
+<<fig=TRUE>>=
+hcmax <- hclust(distancias, method = "complete" )
+plot(hcmax, cex = 0.6, hang = -1, main = "Dendrograma MAX")
+@
+
+\subsubsection{Enlace promedio Group Average}
+
+Realizaremos la clasificación utilizando la \textbf{media de las distancias} entre puntos a cada cluster:
+
+<<fig=TRUE>>=
+hcavg <- hclust(distancias, method = "average" )
+plot(hcavg, cex = 0.6, hang = -1, main = "Dendrograma Group Average")
+@
+
+Como se puede observar, todos los dendogramas son muy parecidos entre si, con ligeros cambios debido al método de agrupación escogido
+para cada uno.
+
+\subsection{Clasificación mediante DBSCAN}
+
+Por último, realizaremos la clasificación mediante el algoritmo \textbf{DBSCAN}. Este algoritmo agrupará nuestros personajes en clusters
+basandose en la densidad, comenzando por una estimación de la distribución de densidad de cada personaje. Utilizaremos los paquetes
+\textbf{fpc} y \textbf{dbscan}:
+
+<<>>=
+install.packages("dbscan")
+install.packages("fpc")
+library("dbscan")
+library("fpc")
+@
+
+Una vez hemos instalado los paquetes necesarios, calcularemos cual es el valor de \textbf{eps} óptimo para nuestra clasificación DBSCAN.
+Para ello, utilizaremos el método k-nearest neighbour, y buscaremos donde exista un cambio drástico en nuestra gráfica:
+
+<<fig=TRUE>>=
+kNNdistplot(medidas, k=4)
+abline(h=16.5, col="red")
+@
+
+En este ejemplo podemos observar que el cambio se encuentra en el \textbf{valor 16.5}, por lo que ese será nuestro valor para eps. A continuación,
+realizaremos la clasificación dbscan y mostraremos una gráfica con los resultados:
+
+<<fig=TRUE>>=
+set.seed(123)
+clasificacionDBSCAN <- fpc::dbscan(medidas, eps = 16.5, MinPts = 5)
+hullplot(medidas, clasificacionDBSCAN$cluster)
+@
+
+Como podemos observar en el gráfico, el algoritmo nos ha separado los personajes en 2 clusters, un pequeño cluster de color \textbf{verde}
+que incluye 6 de estos, y un gran cluster \textbf{rojo} que incluye la gran mayoria, 47. Por último encontramos aquellos puntos negros que
+no están ni en el cluster verde ni en el rojo, estos puntos se corresponde con valores \textbf{outlier}.
+
+\end{document}
